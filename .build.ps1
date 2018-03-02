@@ -1,4 +1,10 @@
 
+<#
+.Synopsis
+	Build script (https://github.com/nightroman/Invoke-Build)
+#>
+
+Set-StrictMode -Version Latest
 $ModuleName = 'PsdKit'
 
 # Synopsis: Test v3+ and v2.
@@ -30,8 +36,17 @@ task Help @{
 	}
 }
 
+# Synopsis: Tests versions.
+task Version {
+	($version1 = .{ switch -Regex -File Release-Notes.md {'##\s+v(\d+\.\d+\.\d+)' {return $Matches[1]}} })
+	assert $version1
+	Import-Module PsdKit
+	$version2 = (Import-Psd PsdKit.psd1).ModuleVersion
+	equals $version1 $version2
+}
+
 # Synopsis: Make the module folder.
-task Module Help, {
+task Module Help, Version, {
 	Remove-Item [z] -Force -Recurse
 	$dir = "$BuildRoot\z\PsdKit"
 	$null = mkdir $dir

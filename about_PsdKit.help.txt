@@ -18,8 +18,8 @@ LONG DESCRIPTION
         - Convert-XmlToPsd - Converts PSD-XML to a psd1 string.
         - Export-PsdXml - Exports PSD-XML to a psd1 file.
         - Import-PsdXml - Imports a psd1 file as PSD-XML.
-        - Get-PsdXml - Gets the PSD-XML node value.
-        - Set-PsdXml - Sets the PSD-XML node value.
+        - Get-PsdXml - Gets node PowerShell data.
+        - Set-PsdXml - Sets node PowerShell data.
 
     PSD-XML import/export scenarios:
 

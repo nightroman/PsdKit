@@ -12,8 +12,8 @@ The module provides commands for the following scenarios:
     - `Convert-XmlToPsd` - Converts PSD-XML to a psd1 string.
     - `Export-PsdXml` - Exports PSD-XML to a psd1 file.
     - `Import-PsdXml` - Imports a psd1 file as PSD-XML.
-    - `Get-PsdXml` - Gets the PSD-XML node value.
-    - `Set-PsdXml` - Sets the PSD-XML node value.
+    - `Get-PsdXml` - Gets node PowerShell data.
+    - `Set-PsdXml` - Sets node PowerShell data.
 
 For more details, see the online version of [about_PsdKit.help.txt](https://github.com/nightroman/PsdKit/blob/master/about_PsdKit.help.txt)
 

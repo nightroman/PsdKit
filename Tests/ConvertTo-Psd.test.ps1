@@ -23,7 +23,7 @@ task Indent {
 	Test-Hash $r 838429fa71b915d95172f5d2798d15a8
 }
 
-task Assorted {
+task Assorted -If ($Version -ge 3) {
 	$data = @(
 		$null
 		'bar1'
@@ -34,9 +34,9 @@ task Assorted {
 		$false
 		[datetime]'2018-02-19'
 		,@(1, "'bar'")
-		@{
-			array = 1, 2, @{p1=1; p2=2}
-			table = @{p1=1; p2=1,2}
+		[ordered]@{
+			array = 1, 2, [ordered]@{p1=1; p2=2}
+			table = [ordered]@{p1=1; p2=1,2}
 			emptyArray = @()
 			emptyTable = @{}
 			"1'key'" = 42
@@ -46,22 +46,19 @@ task Assorted {
 	)
 
 	($r = $data | ConvertTo-Psd)
-	Test-Hash $r 0d899f109288daa3a582e33ff638e885
+	Test-Hash $r 9b008c8dd6952bfa5bd30f09d7944155
 }
 
 task DateTime {
-	$data = @{
-		Date1 = [datetime]'2018-02-19'
-		Date2 = [datetime]636545952000000000
-	}
-
-	($r = ConvertTo-Psd $data)
-	Test-Hash $r 63799421b5537207779b7383870e18f9
-
-	$r = Invoke-Expression $r
 	$date = [datetime]'2018-02-19'
-	equals $date $r.Date1
-	equals $date $r.Date2
+
+	($r = ConvertTo-Psd @{Date = [datetime]'2018-02-19'})
+	Test-Hash $r ac8e2b066907a02e73d4f21ef726c3e2
+	equals ((Invoke-Expression $r).Date) $date
+
+	($r = ConvertTo-Psd @{Date = [datetime]636545952000000000})
+	Test-Hash $r ac8e2b066907a02e73d4f21ef726c3e2
+	equals ((Invoke-Expression $r).Date) $date
 }
 
 task PSCustomObject {

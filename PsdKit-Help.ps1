@@ -107,15 +107,16 @@ $GetSetXPath = @'
 	command = 'ConvertTo-Psd'
 	synopsis = 'Converts objects to a psd1-formatted strings.'
 	description = @'
-	Supported object types:
+	Supported objects:
 		- [System.Collections.IDictionary] -> @{}
 		- [System.Collections.IList] -> @()
 		- [PSCustomObject] -> @{}
-	Supported value types:
+	Supported values:
 		- [string] and [char] -> single quoted strings
 		- [DateTime] -> [DateTime] x.ToString('o')
 		- [bool] -> $true and $false
-		- numbers -> x.ToString()
+		- number -> x.ToString()
+		- $null
 
 	Note that the result string does not include the trailing new line. Thus,
 	if you use ConvertTo-Psd with some Set-Content (save) or Add-Content (log)
@@ -185,7 +186,7 @@ $IndentSpecial
 ### Get-PsdXml command help
 @{
 	command = 'Get-PsdXml'
-	synopsis = 'Gets the PSD-XML node value.'
+	synopsis = 'Gets node PowerShell data.'
 	description = @'
 	This command parses and returns the specified node value. It does not
 	invoke any psd1 code, this is safe like importing psd1 in a usual way.
@@ -287,7 +288,7 @@ $IndentSpecial
 ### Set-PsdXml command help
 @{
 	command = 'Set-PsdXml'
-	synopsis = 'Sets the PSD-XML node value.'
+	synopsis = 'Sets node PowerShell data.'
 	description = @'
 	This command converts data to XML using ConvertTo-Psd and Convert-PsdToXml.
 	The result XML or context replaces the specified node or its content. Note

@@ -1,12 +1,11 @@
 
-Set-StrictMode -Version Latest
 $ErrorActionPreference = 1
 
 #.ExternalHelp PsdKit-Help.xml
 function Convert-PsdToXml {
 	[OutputType([xml])]
 	param(
-		[Parameter(Mandatory=1, ValueFromPipeline=1)]
+		[Parameter(Position=0, Mandatory=1, ValueFromPipeline=1)]
 		[string] $InputObject
 	)
 	process {
@@ -19,7 +18,7 @@ function Convert-PsdToXml {
 function Convert-XmlToPsd {
 	[OutputType([string])]
 	param(
-		[Parameter(Position=1, Mandatory=1)]
+		[Parameter(Position=0, Mandatory=1)]
 		[System.Xml.XmlNode] $Xml,
 		[string] $Indent
 	)
@@ -50,7 +49,7 @@ function Convert-XmlToPsd {
 function ConvertTo-Psd {
 	[OutputType([String])]
 	param(
-		[Parameter(Position=1, ValueFromPipeline=1)]
+		[Parameter(Position=0, ValueFromPipeline=1)]
 		$InputObject,
 		[string] $Indent
 	)
@@ -77,9 +76,9 @@ function ConvertTo-Psd {
 #.ExternalHelp PsdKit-Help.xml
 function Export-PsdXml {
 	param(
-		[Parameter(Position=1, Mandatory=1)]
+		[Parameter(Position=0, Mandatory=1)]
 		[string] $Path,
-		[Parameter(Position=2, Mandatory=1)]
+		[Parameter(Position=1, Mandatory=1)]
 		[System.Xml.XmlNode] $Xml,
 		[string] $Indent
 	)
@@ -91,9 +90,9 @@ function Export-PsdXml {
 #.ExternalHelp PsdKit-Help.xml
 function Get-PsdXml {
 	param(
-		[Parameter(Position=1, Mandatory=1)]
+		[Parameter(Position=0, Mandatory=1)]
 		[System.Xml.XmlNode] $Xml,
-		[Parameter(Position=2)]
+		[Parameter(Position=1)]
 		[string] $XPath
 	)
 	trap {ThrowTerminatingError($_)}
@@ -141,7 +140,7 @@ function Get-PsdXml {
 function Import-Psd {
 	[OutputType([Hashtable])]
 	param(
-		[Parameter(Position=1, Mandatory=1)]
+		[Parameter(Position=0, Mandatory=1)]
 		[string] $Path
 	)
 	trap {ThrowTerminatingError($_)}
@@ -165,13 +164,13 @@ function Import-PsdXml {
 #.ExternalHelp PsdKit-Help.xml
 function Set-PsdXml {
 	param(
-		[Parameter(Position=1, Mandatory=1)]
+		[Parameter(Position=0, Mandatory=1)]
 		[System.Xml.XmlNode] $Xml,
-		[Parameter(Position=2, Mandatory=1)]
+		[Parameter(Position=1, Mandatory=1)]
 		[AllowEmptyString()]
 		[AllowNull()]
 		$Value,
-		[Parameter(Position=3)]
+		[Parameter(Position=2)]
 		[string] $XPath
 	)
 	trap {ThrowTerminatingError($_)}
@@ -262,13 +261,7 @@ function Write-Psd($Object, $Depth=0, [switch]$NoIndent) {
 				if ($Object.Count) {
 					$writer.WriteLine('@{')
 					$indent2 = $script:Indent * ($Depth + 1)
-					if ($Object -is [System.Collections.Specialized.OrderedDictionary]) {
-						$enum = $Object.GetEnumerator()
-					}
-					else {
-						$enum = $Object.GetEnumerator() | Sort-Object Key
-					}
-					foreach($e in $enum) {
+					foreach($e in $Object.GetEnumerator()) {
 						$key = $e.Key
 						$keyType = $key.GetType()
 						if ($keyType -eq [string]) {
@@ -528,22 +521,22 @@ function Add-Array($elem) {
 				$e.InnerText = $t1.Content
 				break
 			}
-            StatementSeparator {
-                $null = Add-XmlElement $elem Semicolon
-                break
-            }
-            Operator {
-                if ($t1.Content -eq ',') {
-                    $null = Add-XmlElement $elem Comma
-                }
-                else {
-                	ThrowUnexpectedToken $t1
-                }
-                break
-            }
-            default {
-            	Add-Value $elem $t1
-            }
+			StatementSeparator {
+				$null = Add-XmlElement $elem Semicolon
+				break
+			}
+			Operator {
+				if ($t1.Content -eq ',') {
+					$null = Add-XmlElement $elem Comma
+				}
+				else {
+					ThrowUnexpectedToken $t1
+				}
+				break
+			}
+			default {
+				Add-Value $elem $t1
+			}
 		}
 	}
 }
@@ -565,10 +558,10 @@ function Add-Item($elem, $t1, $Type) {
 	while($queue.Count) {
 		$t1 = $queue.Peek()
 		switch ($t1.Type) {
-		 	GroupEnd {
+			GroupEnd {
 				return
 			}
-		 	StatementSeparator {
+			StatementSeparator {
 				return
 			}
 			NewLine {
@@ -618,10 +611,10 @@ function Add-Table($elem) {
 				$e.InnerText = $t1.Content
 				break
 			}
-            StatementSeparator {
-                $null = Add-XmlElement $elem Semicolon
-                break
-            }
+			StatementSeparator {
+				$null = Add-XmlElement $elem Semicolon
+				break
+			}
 			Member {
 				Add-Item $elem $t1
 				break
@@ -634,9 +627,9 @@ function Add-Table($elem) {
 				Add-Item $elem $t1 -Type Number
 				break
 			}
-            default {
-            	ThrowUnexpectedToken $t1
-            }
+			default {
+				ThrowUnexpectedToken $t1
+			}
 		}
 	}
 }
@@ -654,19 +647,19 @@ function Add-Data($elem) {
 				$e.InnerText = $t1.Content
 				break
 			}
-            StatementSeparator {
-                $null = Add-XmlElement $elem Semicolon
-                break
-            }
-            Operator {
-                if ($t1.Content -eq ',') {
-                    $null = Add-XmlElement $elem Comma
-                }
-                else {
-                    ThrowUnexpectedToken $t1
-                }
-                break
-            }
+			StatementSeparator {
+				$null = Add-XmlElement $elem Semicolon
+				break
+			}
+			Operator {
+				if ($t1.Content -eq ',') {
+					$null = Add-XmlElement $elem Comma
+				}
+				else {
+					ThrowUnexpectedToken $t1
+				}
+				break
+			}
 			default {
 				Add-Value $elem $t1
 			}
