@@ -1,2 +1,33 @@
+
 # PsdKit
-PowerShell data (psd1) tool kit
+
+The module provides commands for the following scenarios:
+
+- Data persistence via PowerShell data (psd1) files:
+    - `ConvertTo-Psd` - Converts objects to psd1 strings.
+    - `Import-Psd` - Imports objects from a psd1 file.
+
+- Updates of psd1 files preserving comments and structure:
+    - `Convert-PsdToXml` - Converts a psd1 string to PSD-XML.
+    - `Convert-XmlToPsd` - Converts PSD-XML to a psd1 string.
+    - `Export-PsdXml` - Exports PSD-XML to a psd1 file.
+    - `Import-PsdXml` - Imports a psd1 file as PSD-XML.
+    - `Get-PsdXml` - Gets the PSD-XML node value.
+    - `Set-PsdXml` - Sets the PSD-XML node value.
+
+For more details, see the online version of [about_PsdKit.help.txt](https://github.com/nightroman/PsdKit/blob/master/about_PsdKit.help.txt)
+
+## How to install and get help
+
+Install [PsdKit from PSGallery](https://www.powershellgallery.com/packages/PsdKit):
+
+    Install-Module PsdKit
+
+Import the module and get the conceptual help:
+
+    Import-Module PsdKit
+    help about_PsdKit
+
+Get help for individual commands:
+
+    help ConvertTo-Psd -Full

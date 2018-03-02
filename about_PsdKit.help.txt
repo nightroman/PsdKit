@@ -1,0 +1,138 @@
+TOPIC
+    about_PsdKit
+
+SHORT DESCRIPTION
+    PowerShell data (psd1) tool kit
+
+LONG DESCRIPTION
+    The module provides the following commands:
+
+    - Data persistence via PowerShell data (psd1) files:
+
+        - ConvertTo-Psd - Converts objects to psd1 strings.
+        - Import-Psd - Imports objects from a psd1 file.
+
+    - Updates of psd1 files preserving comments and structure:
+
+        - Convert-PsdToXml - Converts a psd1 string to PSD-XML.
+        - Convert-XmlToPsd - Converts PSD-XML to a psd1 string.
+        - Export-PsdXml - Exports PSD-XML to a psd1 file.
+        - Import-PsdXml - Imports a psd1 file as PSD-XML.
+        - Get-PsdXml - Gets the PSD-XML node value.
+        - Set-PsdXml - Sets the PSD-XML node value.
+
+    PSD-XML import/export scenarios:
+
+        - Expressions except values and casts are not supported.
+        - New lines, comments, and separators are preserved.
+        - Spaces and tabs are not necessarily preserved.
+        - The order of values is preserved.
+        - Supported value types:
+            - String
+                single quoted '' or single quoted here-string @''@
+                other strings are converted to one of single quoted
+            - Number
+                numbers with optional hex notation and suffixes
+            - Variable
+                $null, $true, $false
+                other variables are supported but unusual in psd1
+            - Table
+                `key=value` separated by new lines or semicolons
+            - Array
+                @() with new line and comma separated values
+            - Cast
+                Expressions like [DateTime] '2018-01-01'
+
+    PSD-XML get/set scenarios:
+
+        Get-PsdXml and Set-PsdXml work well if you compose the changeable
+        parts of psd1 properly. Namely:
+
+            - avoid comments
+            - avoid commas, use @() and separate values by new lines
+            - avoid semicolons, separate hashtable items by new lines
+
+        In this case, you get and set normal PowerShell data, you do not have
+        to know the details of PSD-XML, except some simple XPath expressions,
+        often the same 'Data/Table/Item[@Key="..."]'.
+
+        Other parts of psd1 files (not supposed to be changed by scripts) are
+        composed as you like, everything except some space formatting is kept
+        when you change data and save.
+
+EXAMPLE
+    Write and read psd1 log file
+
+        # Append log records several times
+        @{time = Get-Date; text = ...} | ConvertTo-Psd | Add-Content log.psd1
+
+        # Read log records
+        Import-Psd log.psd1
+
+EXAMPLE
+    Change the version in a psd1 module manifest
+
+        # Read psd1 as PSD-XML
+        $xml = Import-PsdXml $FilePath
+
+        # Set the new version
+        Set-PsdXml $xml 1.0.2 'Data/Table/Item[@Key="ModuleVersion"]'
+
+        # Save changed PSD-XML
+        Export-PsdXml $FilePath $xml
+
+EXAMPLE
+    Convert JSON to psd1
+
+        $Host | ConvertTo-Json -Depth 1 | ConvertFrom-Json | ConvertTo-Psd
+
+PSD-XML SCHEMA
+    <Data>
+        The root node.
+        Attributes:
+            Indent: inferred non-default indent (two spaces or one tab)
+                    or some custom indent used as default on exporting
+        Nodes:
+            String, Number, Variable, Cast, Array, Table,
+            Comment, NewLine, Comma, Semicolon
+    <String>
+        Attributes:
+            Type: "1" ~ single quoted here-string
+        Text:
+            string value
+    <Number>
+        Text:
+            number value
+    <Variable>
+        Text:
+            variable name without `$`
+    <Cast>
+        Attributes:
+            Type: type literal, e.g. `[DateTime]`
+        Nodes:
+            String, Number, Variable
+    <Array>
+        Array nodes for `@()`.
+        Nodes:
+            same as <Data>
+    <Table>
+        Hashtable nodes for `@{}`.
+        Nodes:
+            Item, Comment, NewLine, Semicolon
+    <Item>
+        Hashtable item for `key = value`.
+        Attributes:
+            Key: hashtable key value
+            Type:
+                "" ~ usual not quoted string key
+                "String" ~ quoted string key
+                "Number" ~ numeric key
+        Nodes:
+            same as <Data>
+    <Comment>
+        Text:
+            comment text including `#` or `<# #>`
+    <NewLine>
+    <Comma>
+    <Semicolon>
+        Empty nodes representing separators.
