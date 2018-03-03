@@ -98,7 +98,7 @@ function Get-PsdXml {
 	trap {ThrowTerminatingError($_)}
 	if ($XPath) {
 		$node = $xml.SelectSingleNode($XPath)
-		if (!$node) {throw 'XPath selects nothing.'}
+		if (!$node) {throw "XPath selects nothing: '$XPath'."}
 	}
 	else {
 		$node = $Xml
@@ -319,6 +319,10 @@ function Write-Psd($Object, $Depth=0, [switch]$NoIndent) {
 				}
 				return
 			}
+			elseif ($Object -is [System.Management.Automation.SwitchParameter]) {
+				$writer.WriteLine($(if ($Object) {'$true'} else {'$false'}))
+				return
+			}
 		}
 		String {
 			$writer.WriteLine("'{0}'" -f $Object.Replace("'", "''"))
@@ -337,7 +341,12 @@ function Write-Psd($Object, $Depth=0, [switch]$NoIndent) {
 			return
 		}
 		default {
-			$writer.WriteLine($Object.ToString())
+			if ($type.IsEnum) {
+				$writer.WriteLine("'{0}'" -f $Object)
+			}
+			else {
+				$writer.WriteLine($Object)
+			}
 			return
 		}
 	}

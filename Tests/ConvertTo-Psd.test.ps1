@@ -101,3 +101,18 @@ task JsonToPsd -If ($Version -ge 5) {
 	($r = $json | ConvertFrom-Json | ConvertTo-Psd)
 	Test-Hash $r f550e9ceb0df2caf8eddba1f50a1d64c
 }
+
+task SwitchParameter {
+	$f = [switch]$false
+	$t = [switch]$true
+	($r = ConvertTo-Psd $f)
+	equals $r '$false'
+	($r = ConvertTo-Psd $t)
+	equals $r '$true'
+}
+
+# #1
+task Enum {
+	($r = [ConsoleColor]'Cyan' | ConvertTo-Psd)
+	equals $r "'Cyan'"
+}
