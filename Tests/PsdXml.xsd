@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:complexType name="Comma" />
+  <xs:complexType name="NewLine" />
+  <xs:complexType name="Semicolon" />
+
+  <xs:complexType name="Comment">
+    <xs:simpleContent>
+      <xs:extension base="xs:string" />
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="Number">
+    <xs:simpleContent>
+      <xs:extension base="xs:string" />
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="Variable">
+    <xs:simpleContent>
+      <xs:extension base="xs:string" />
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="String">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="Type" type="xs:unsignedByte" use="optional" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="Cast">
+    <xs:choice>
+      <xs:element name="Array" type="Array" />
+      <xs:element name="Number" type="Number" />
+      <xs:element name="String" type="String" />
+      <xs:element name="Table" type="Table" />
+      <xs:element name="Variable" type="Variable" />
+    </xs:choice>
+    <xs:attribute name="Type" type="xs:string" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="Array">
+    <xs:choice maxOccurs="unbounded">
+      <xs:element name="Array" type="Array" />
+      <xs:element name="Cast" type="Cast" />
+      <xs:element name="Comma" type="Comma" />
+      <xs:element name="Comment" type="Comment" />
+      <xs:element name="NewLine" type="NewLine" />
+      <xs:element name="Number" type="Number" />
+      <xs:element name="Semicolon" type="Semicolon" />
+      <xs:element name="String" type="String" />
+      <xs:element name="Table" type="Table" />
+      <xs:element name="Variable" type="Variable" />
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="Item">
+    <xs:choice maxOccurs="unbounded">
+      <xs:element name="Array" type="Array" />
+      <xs:element name="Cast" type="Cast" />
+      <xs:element name="Comma" type="Comma" />
+      <xs:element name="Comment" type="Comment" />
+      <xs:element name="NewLine" type="NewLine" />
+      <xs:element name="Number" type="Number" />
+      <xs:element name="String" type="String" />
+      <xs:element name="Table" type="Table" />
+      <xs:element name="Variable" type="Variable" />
+    </xs:choice>
+    <xs:attribute name="Key" type="xs:string" use="required" />
+    <xs:attribute name="Type" type="xs:string" use="optional" />
+  </xs:complexType>
+
+  <xs:complexType name="Table">
+    <xs:choice maxOccurs="unbounded">
+      <xs:element name="Comment" type="Comment" />
+      <xs:element name="Item" type="Item" />
+      <xs:element name="NewLine" type="NewLine" />
+      <xs:element name="Semicolon" type="Semicolon" />
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:element name="Data">
+    <xs:complexType>
+      <xs:choice maxOccurs="unbounded">
+        <xs:element name="Array" type="Array" />
+        <xs:element name="Cast" type="Cast" />
+        <xs:element name="Comma" type="Comma" />
+        <xs:element name="Comment" type="Comment" />
+        <xs:element name="NewLine" type="NewLine" />
+        <xs:element name="Number" type="Number" />
+        <xs:element name="Semicolon" type="Semicolon" />
+        <xs:element name="String" type="String" />
+        <xs:element name="Table" type="Table" />
+        <xs:element name="Variable" type="Variable" />
+      </xs:choice>
+      <xs:attribute name="Indent" type="xs:string" use="optional" />
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

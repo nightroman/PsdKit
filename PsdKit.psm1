@@ -336,7 +336,7 @@ function Write-Psd($Object, $Depth=0, [switch]$NoIndent) {
 			$writer.WriteLine("[DateTime] '{0}'" -f $Object.ToString('o'))
 			return
 		}
-		'Char' {
+		Char {
 			$writer.WriteLine("'{0}'" -f $Object.Replace("'", "''"))
 			return
 		}

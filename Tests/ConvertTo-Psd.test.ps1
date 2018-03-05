@@ -111,8 +111,13 @@ task SwitchParameter {
 	equals $r '$true'
 }
 
-# #1
+# Issue #1
 task Enum {
 	($r = [ConsoleColor]'Cyan' | ConvertTo-Psd)
 	equals $r "'Cyan'"
+
+	if ($Version -ge 5) {
+		($r = [System.Net.SecurityProtocolType]'Ssl3,Tls,Tls11,Tls12' | ConvertTo-Psd)
+		equals $r "'Ssl3, Tls, Tls11, Tls12'"
+	}
 }

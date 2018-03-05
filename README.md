@@ -15,7 +15,8 @@ The module provides commands for the following scenarios:
     - `Get-PsdXml` - Gets node PowerShell data.
     - `Set-PsdXml` - Sets node PowerShell data.
 
-For more details, see the online version of [about_PsdKit.help.txt](https://github.com/nightroman/PsdKit/blob/master/about_PsdKit.help.txt)
+For more details, see the online version of [about_PsdKit.help.txt](https://github.com/nightroman/PsdKit/blob/master/about_PsdKit.help.txt).
+See also [Examples](https://github.com/nightroman/PsdKit/blob/master/Examples).
 
 ## How to install and get help
 

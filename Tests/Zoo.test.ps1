@@ -1,12 +1,40 @@
 
 . ./About.ps1
 
-task Main {
+task Validate {
+	# test PsdXml round trip
 	$xml = Import-PsdXml test-01.psd1
 	Export-PsdXml z.psd1 $xml
-
 	Assert-SameFile test-01.psd1 z.psd1
-	Remove-Item z.psd1
+
+	# for validation tests
+	$xmlPath = "$BuildRoot\z.xml"
+	$xsdPath = "$BuildRoot\PsdXml.xsd"
+	$xml.Save($xmlPath)
+
+	# validate with reader settings
+	$settings = New-Object System.Xml.XmlReaderSettings
+	$null = $settings.Schemas.Add('', $xsdPath)
+	$settings.ValidationType = 'Schema'
+	$reader = [System.Xml.XmlReader]::Create($xmlPath, $settings)
+	try {
+		$xml = New-Object xml
+		$xml.Load($reader)
+	}
+	finally {
+		$reader.Close()
+	}
+
+	# validate with Validate()
+	$xml = New-Object xml
+	$xml.Load($xmlPath)
+	$null = $xml.Schemas.Add('', $xsdPath)
+	$xml.Validate({
+		throw ($_ | Format-List | Out-String)
+	})
+
+	# end
+	Remove-Item z.psd1, $xmlPath
 }
 
 task BadXml {

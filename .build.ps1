@@ -45,8 +45,19 @@ task Version {
 	equals $version1 $version2
 }
 
+# Synopsis: Copy scripts to the project.
+task UpdateScript {
+	$it = 'Update-PsdWebData.ps1'
+	foreach($it in $it) {
+		$source = Get-Item (Get-Command $it).Definition
+		$target = Get-Item "Examples/$it"
+		assert ($target.LastWriteTime -le $source.LastWriteTime)
+		Copy-Item $source $target
+	}
+}
+
 # Synopsis: Make the module folder.
-task Module Help, Version, {
+task Module Help, Version, UpdateScript, {
 	Remove-Item [z] -Force -Recurse
 	$dir = "$BuildRoot\z\PsdKit"
 	$null = mkdir $dir
@@ -66,4 +77,4 @@ task Clean {
 	Remove-Item -Force -Recurse
 }
 
-task . Help, Test
+task . UpdateScript, Help, Test
