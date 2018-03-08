@@ -1,6 +1,6 @@
 @{
 	Author = 'Roman Kuzmin'
-	ModuleVersion = '0.0.3'
+	ModuleVersion = '0.1.0'
 	Description = 'PowerShell data (psd1) tool kit'
 	CompanyName = 'https://github.com/nightroman'
 	Copyright = 'Copyright (c) Roman Kuzmin'

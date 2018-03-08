@@ -12,7 +12,7 @@ task Test Test3, Test2, Test6
 
 # Synopsis: Test PS v3-5
 task Test3 {
-	Invoke-Build **
+	Invoke-Build ** Tests
 }
 
 # Synopsis: Test PS v2.

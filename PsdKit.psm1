@@ -266,24 +266,24 @@ function Write-Psd($Object, $Depth=0, [switch]$NoIndent) {
 						$keyType = $key.GetType()
 						if ($keyType -eq [string]) {
 							if ($key -match '^\w+$' -and $key -match '^\D') {
-								$writer.Write(('{0}{1} = ' -f $indent2, $key))
+								$writer.Write('{0}{1} = ', $indent2, $key)
 							}
 							else {
-								$writer.Write(("{0}'{1}' = " -f $indent2, $key.Replace("'", "''")))
+								$writer.Write("{0}'{1}' = ", $indent2, $key.Replace("'", "''"))
 							}
 						}
 						elseif ($keyType -eq [int]) {
-							$writer.Write(('{0}{1} = ' -f $indent2, $key))
+							$writer.Write('{0}{1} = ', $indent2, $key)
 						}
 						elseif ($keyType -eq [long]) {
-							$writer.Write(('{0}{1}L = ' -f $indent2, $key))
+							$writer.Write('{0}{1}L = ', $indent2, $key)
 						}
 						else {
 							throw "Not supported key type '$($keyType.FullName)'."
 						}
 						Write-Psd $e.Value ($Depth + 1) -NoIndent
 					}
-					$writer.WriteLine("$indent1}" )
+					$writer.WriteLine("$indent1}")
 				}
 				else {
 					$writer.WriteLine('@{}')
@@ -296,10 +296,10 @@ function Write-Psd($Object, $Depth=0, [switch]$NoIndent) {
 				foreach($e in $Object.PSObject.Properties) {
 					$key = $e.Name
 					if ($key -match '^\w+$' -and $key -match '^\D') {
-						$writer.Write(('{0}{1} = ' -f $indent2, $key))
+						$writer.Write('{0}{1} = ', $indent2, $key)
 					}
 					else {
-						$writer.Write(("{0}'{1}' = " -f $indent2, $key.Replace("'", "''")))
+						$writer.Write("{0}'{1}' = ", $indent2, $key.Replace("'", "''"))
 					}
 					Write-Psd $e.Value ($Depth + 1) -NoIndent
 				}
@@ -319,13 +319,17 @@ function Write-Psd($Object, $Depth=0, [switch]$NoIndent) {
 				}
 				return
 			}
-			elseif ($Object -is [System.Management.Automation.SwitchParameter]) {
+			elseif ($type -eq [System.Guid] -or $type -eq [System.Version]) {
+				$writer.WriteLine("'{0}'", $Object)
+				return
+			}
+			elseif ($type -eq [System.Management.Automation.SwitchParameter]) {
 				$writer.WriteLine($(if ($Object) {'$true'} else {'$false'}))
 				return
 			}
 		}
 		String {
-			$writer.WriteLine("'{0}'" -f $Object.Replace("'", "''"))
+			$writer.WriteLine("'{0}'", $Object.Replace("'", "''"))
 			return
 		}
 		Boolean {
@@ -333,16 +337,19 @@ function Write-Psd($Object, $Depth=0, [switch]$NoIndent) {
 			return
 		}
 		DateTime {
-			$writer.WriteLine("[DateTime] '{0}'" -f $Object.ToString('o'))
+			$writer.WriteLine("[DateTime] '{0}'", $Object.ToString('o'))
 			return
 		}
 		Char {
-			$writer.WriteLine("'{0}'" -f $Object.Replace("'", "''"))
+			$writer.WriteLine("'{0}'", $Object.Replace("'", "''"))
 			return
+		}
+		DBNull {
+			throw 'DBNull is not supported yet.'
 		}
 		default {
 			if ($type.IsEnum) {
-				$writer.WriteLine("'{0}'" -f $Object)
+				$writer.WriteLine("'{0}'", $Object)
 			}
 			else {
 				$writer.WriteLine($Object)

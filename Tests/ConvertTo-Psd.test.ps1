@@ -23,7 +23,7 @@ task Indent {
 	Test-Hash $r 838429fa71b915d95172f5d2798d15a8
 }
 
-task Assorted -If ($Version -ge 3) {
+task Mixed -If ($Version -ge 3) {
 	$data = @(
 		$null
 		'bar1'
@@ -120,4 +120,18 @@ task Enum {
 		($r = [System.Net.SecurityProtocolType]'Ssl3,Tls,Tls11,Tls12' | ConvertTo-Psd)
 		equals $r "'Ssl3, Tls, Tls11, Tls12'"
 	}
+}
+
+# Issue #2
+task GuidAndVersion {
+	($r = [guid]'8b3ab2af-7c2f-401b-902c-1c06369bd5c2' | ConvertTo-Psd)
+	equals $r "'8b3ab2af-7c2f-401b-902c-1c06369bd5c2'"
+
+	($r = [version]'1.2.3' | ConvertTo-Psd)
+	equals $r "'1.2.3'"
+}
+
+task DBNull {
+	($r = try {[DBNull]::Value | ConvertTo-Psd} catch {$_})
+	equals "$r" 'DBNull is not supported yet.'
 }

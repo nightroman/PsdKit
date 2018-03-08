@@ -1,6 +1,13 @@
 
 # PsdKit Release Notes
 
+## v0.1.0
+
+- `ConvertTo-Psd`
+    - write `Guid` and `Version` as strings
+    - throw on `DBNull`, to be continued
+- Add *Examples/Update-PsdWebData.ps1*.
+
 ## v0.0.3
 
 - Fix #1 (for now, write enums as strings)

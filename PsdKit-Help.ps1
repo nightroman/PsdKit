@@ -112,7 +112,7 @@ $GetSetXPath = @'
 		- [System.Collections.IList] -> @()
 		- [PSCustomObject] -> @{}
 	Supported values:
-		- [string], [char], enums -> single quoted strings
+		- [string], [char], [guid], [version], enum -> single quoted string
 		- [DateTime] -> [DateTime] x.ToString('o')
 		- [bool] -> $true and $false
 		- number -> x.ToString()

@@ -1,14 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <!--Separators-->
+
   <xs:complexType name="Comma" />
   <xs:complexType name="NewLine" />
   <xs:complexType name="Semicolon" />
+
+  <!--Comment-->
 
   <xs:complexType name="Comment">
     <xs:simpleContent>
       <xs:extension base="xs:string" />
     </xs:simpleContent>
   </xs:complexType>
+
+  <!--Values-->
 
   <xs:complexType name="Number">
     <xs:simpleContent>
@@ -41,18 +47,14 @@
     <xs:attribute name="Type" type="xs:string" use="required" />
   </xs:complexType>
 
-  <xs:complexType name="Array">
+  <!--Collections-->
+
+  <xs:complexType name="Table">
     <xs:choice maxOccurs="unbounded">
-      <xs:element name="Array" type="Array" />
-      <xs:element name="Cast" type="Cast" />
-      <xs:element name="Comma" type="Comma" />
       <xs:element name="Comment" type="Comment" />
+      <xs:element name="Item" type="Item" />
       <xs:element name="NewLine" type="NewLine" />
-      <xs:element name="Number" type="Number" />
       <xs:element name="Semicolon" type="Semicolon" />
-      <xs:element name="String" type="String" />
-      <xs:element name="Table" type="Table" />
-      <xs:element name="Variable" type="Variable" />
     </xs:choice>
   </xs:complexType>
 
@@ -72,17 +74,12 @@
     <xs:attribute name="Type" type="xs:string" use="optional" />
   </xs:complexType>
 
-  <xs:complexType name="Table">
-    <xs:choice maxOccurs="unbounded">
-      <xs:element name="Comment" type="Comment" />
-      <xs:element name="Item" type="Item" />
-      <xs:element name="NewLine" type="NewLine" />
-      <xs:element name="Semicolon" type="Semicolon" />
-    </xs:choice>
+  <xs:complexType name="Array">
+    <xs:group ref="Any"/>
   </xs:complexType>
 
-  <xs:element name="Data">
-    <xs:complexType>
+  <xs:group name="Any">
+    <xs:sequence>
       <xs:choice maxOccurs="unbounded">
         <xs:element name="Array" type="Array" />
         <xs:element name="Cast" type="Cast" />
@@ -95,6 +92,14 @@
         <xs:element name="Table" type="Table" />
         <xs:element name="Variable" type="Variable" />
       </xs:choice>
+    </xs:sequence>
+  </xs:group>
+
+  <!--Root-->
+
+  <xs:element name="Data">
+    <xs:complexType>
+      <xs:group ref="Any"/>
       <xs:attribute name="Indent" type="xs:string" use="optional" />
     </xs:complexType>
   </xs:element>

@@ -87,14 +87,36 @@ EXAMPLE
         $Host | ConvertTo-Json -Depth 1 | ConvertFrom-Json | ConvertTo-Psd
 
 PSD-XML SCHEMA
+    With recommended Get-PsdXml and Set-PsdXml you do not have to know much
+    details about the schema, they operate with native PowerShell data. But
+    for some XPath paths, normally simple, some understanding is needed.
+
     <Data>
         The root node.
         Attributes:
             Indent: inferred non-default indent (two spaces or one tab)
                     or some custom indent used as default on exporting
         Nodes:
-            String, Number, Variable, Cast, Array, Table,
+            Table, Array, String, Number, Variable, Cast,
             Comment, NewLine, Comma, Semicolon
+    <Table>
+        Hashtable nodes for `@{}`.
+        Nodes:
+            Item, Comment, NewLine, Semicolon
+    <Item>
+        Hashtable item for `key = value`.
+        Attributes:
+            Key: hashtable key value
+            Type:
+                "" ~ usual not quoted string key
+                "String" ~ quoted string key
+                "Number" ~ numeric key
+        Nodes:
+            same as <Data>
+    <Array>
+        Array nodes for `@()`.
+        Nodes:
+            same as <Data>
     <String>
         Attributes:
             Type: "1" ~ single quoted here-string
@@ -111,24 +133,6 @@ PSD-XML SCHEMA
             Type: type literal, e.g. `[DateTime]`
         Nodes:
             String, Number, Variable
-    <Array>
-        Array nodes for `@()`.
-        Nodes:
-            same as <Data>
-    <Table>
-        Hashtable nodes for `@{}`.
-        Nodes:
-            Item, Comment, NewLine, Semicolon
-    <Item>
-        Hashtable item for `key = value`.
-        Attributes:
-            Key: hashtable key value
-            Type:
-                "" ~ usual not quoted string key
-                "String" ~ quoted string key
-                "Number" ~ numeric key
-        Nodes:
-            same as <Data>
     <Comment>
         Text:
             comment text including `#` or `<# #>`
