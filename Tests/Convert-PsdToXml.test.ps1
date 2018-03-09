@@ -29,3 +29,76 @@ task SimpleTest {
 '@
 	equals $xml.InnerXml '<Data><Number>42</Number><NewLine /><Number>3.14</Number></Data>'
 }
+
+# single-quoted-simple is preserved
+task single-quoted-simple {
+	#! was converted to a bad here-string
+	$s1 = {'line1
+''@ line2
+line3'}.ToString()
+
+	$xml = Convert-PsdToXml $s1
+	$r = $xml.SelectSingleNode('Data/String')
+	equals $r.Attributes.Count 0
+
+	($r = Convert-XmlToPsd $xml)
+	equals $r $s1
+}
+
+# single-quoted-verbatim is preserved
+task single-quoted-verbatim {
+	$s1 = {@'
+line1
+line2
+'@}.ToString()
+
+	$xml = Convert-PsdToXml $s1
+	$r = $xml.SelectSingleNode('Data/String')
+	equals $r.GetAttribute('Type') '1'
+
+	($r = Convert-XmlToPsd $xml)
+	equals $r $s1
+}
+
+# double-quoted-simple is saved as single-quoted-simple
+task double-quoted-simple {
+	#! was converted to a bad here-string
+	$s1 = {"line1
+'@ line2
+line3"}.ToString()
+
+	$xml = Convert-PsdToXml $s1
+	$r = $xml.SelectSingleNode('Data/String')
+	equals $r.Attributes.Count 0
+
+	($r = Convert-XmlToPsd $xml)
+	equals $r @'
+'line1
+''@ line2
+line3'
+'@
+}
+
+# double-quoted-verbatim is saved as single-quoted-simple
+# - saving as @""@ is possible but more difficult due to escaping
+# - saving as @''@ may produce invalid data, no way to escape `'@`
+task double-quoted-verbatim {
+	$s1 = {@"
+@'
+line1
+line2
+'@
+"@}.ToString()
+
+	$xml = Convert-PsdToXml $s1
+	$r = $xml.SelectSingleNode('Data/String')
+	equals $r.Attributes.Count 0
+
+	($r = Convert-XmlToPsd $xml)
+	equals $r @"
+'@''
+line1
+line2
+''@'
+"@
+}

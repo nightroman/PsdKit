@@ -21,6 +21,8 @@
 two+ line
 string as here string
 '@
+	String3 = 'two+ line
+string as simple string'
 	# Cast
 	Date = [DateTime] '2018-02-20'
 

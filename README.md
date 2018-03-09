@@ -16,7 +16,11 @@ The module provides commands for the following scenarios:
     - `Set-PsdXml` - Sets node PowerShell data.
 
 For more details, see the online version of [about_PsdKit.help.txt](https://github.com/nightroman/PsdKit/blob/master/about_PsdKit.help.txt).
-See also [Examples](https://github.com/nightroman/PsdKit/blob/master/Examples).
+
+See also [Examples](https://github.com/nightroman/PsdKit/blob/master/Examples):
+
+- [Build-Manifest.ps1] - Builds this module manifest automatically.
+- [Update-PsdWebData.ps1] - Updates "web data islands" in psd1 files.
 
 ## How to install and get help
 
@@ -32,3 +36,6 @@ Import the module and get the conceptual help:
 Get help for individual commands:
 
     help ConvertTo-Psd -Full
+
+[Build-Manifest.ps1]: https://github.com/nightroman/PsdKit/blob/master/Examples/Build-Manifest.ps1
+[Update-PsdWebData.ps1]: https://github.com/nightroman/PsdKit/blob/master/Examples/Update-PsdWebData.ps1

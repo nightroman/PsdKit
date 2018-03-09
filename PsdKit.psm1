@@ -28,21 +28,25 @@ function Convert-XmlToPsd {
 		if (!($doc = $Xml.OwnerDocument)) {$doc = $Xml}
 		if ($attr = $doc.DocumentElement.GetAttribute('Indent')) {$Indent = $attr}
 	}
-	$Indent = Convert-Indent $Indent
 
-	$script:Indent = $Indent
 	$script:LineStarted = $false
-	$writer = New-Object System.IO.StringWriter
-	if ($Xml.NodeType -ceq 'Document') {
-		Write-XmlChild $Xml.DocumentElement
+	$script:Indent = Convert-Indent $Indent
+	$script:Writer = New-Object System.IO.StringWriter
+	try {
+		if ($Xml.NodeType -ceq 'Document') {
+			Write-XmlChild $Xml.DocumentElement
+		}
+		elseif ($Xml.Name -ceq 'Item') {
+			Write-XmlChild $Xml
+		}
+		else {
+			Write-XmlElement $Xml
+		}
+		$script:Writer.ToString()
 	}
-	elseif ($Xml.Name -ceq 'Item') {
-		Write-XmlChild $Xml
+	finally {
+		$script:Writer = $null
 	}
-	else {
-		Write-XmlElement $Xml
-	}
-	$writer.ToString()
 }
 
 #.ExternalHelp PsdKit-Help.xml
@@ -62,14 +66,17 @@ function ConvertTo-Psd {
 	end {
 		trap {ThrowTerminatingError($_)}
 
-		$Indent = Convert-Indent $Indent
-		$script:Indent = $Indent
-
-		$writer = New-Object System.IO.StringWriter
-		foreach($object in $objects) {
-			Write-Psd $object
+		$script:Indent = Convert-Indent $Indent
+		$script:Writer = New-Object System.IO.StringWriter
+		try {
+			foreach($object in $objects) {
+				Write-Psd $object
+			}
+			$script:Writer.ToString().TrimEnd()
 		}
-		$writer.ToString().TrimEnd()
+		finally {
+			$script:Writer = $null
+		}
 	}
 }
 
@@ -157,7 +164,7 @@ function Import-PsdXml {
 		[string] $Path
 	)
 	trap {ThrowTerminatingError($_)}
-	$script = Get-Content -LiteralPath $Path
+	$script = [System.IO.File]::ReadAllText($PSCmdlet.GetUnresolvedProviderPathFromPSPath($Path))
 	New-PsdXml $script
 }
 
@@ -246,11 +253,11 @@ function ThrowUnexpectedToken($t1) {
 function Write-Psd($Object, $Depth=0, [switch]$NoIndent) {
 	$indent1 = $script:Indent * $Depth
 	if (!$NoIndent) {
-		$writer.Write($indent1)
+		$script:Writer.Write($indent1)
 	}
 
 	if ($null -eq $Object) {
-		$writer.WriteLine('$null')
+		$script:Writer.WriteLine('$null')
 		return
 	}
 
@@ -259,100 +266,105 @@ function Write-Psd($Object, $Depth=0, [switch]$NoIndent) {
 		Object {
 			if ($Object -is [System.Collections.IDictionary]) {
 				if ($Object.Count) {
-					$writer.WriteLine('@{')
+					$script:Writer.WriteLine('@{')
 					$indent2 = $script:Indent * ($Depth + 1)
 					foreach($e in $Object.GetEnumerator()) {
 						$key = $e.Key
 						$keyType = $key.GetType()
 						if ($keyType -eq [string]) {
 							if ($key -match '^\w+$' -and $key -match '^\D') {
-								$writer.Write('{0}{1} = ', $indent2, $key)
+								$script:Writer.Write('{0}{1} = ', $indent2, $key)
 							}
 							else {
-								$writer.Write("{0}'{1}' = ", $indent2, $key.Replace("'", "''"))
+								$script:Writer.Write("{0}'{1}' = ", $indent2, $key.Replace("'", "''"))
 							}
 						}
 						elseif ($keyType -eq [int]) {
-							$writer.Write('{0}{1} = ', $indent2, $key)
+							$script:Writer.Write('{0}{1} = ', $indent2, $key)
 						}
 						elseif ($keyType -eq [long]) {
-							$writer.Write('{0}{1}L = ', $indent2, $key)
+							$script:Writer.Write('{0}{1}L = ', $indent2, $key)
 						}
 						else {
 							throw "Not supported key type '$($keyType.FullName)'."
 						}
 						Write-Psd $e.Value ($Depth + 1) -NoIndent
 					}
-					$writer.WriteLine("$indent1}")
+					$script:Writer.WriteLine("$indent1}")
 				}
 				else {
-					$writer.WriteLine('@{}')
+					$script:Writer.WriteLine('@{}')
 				}
-				return
-			}
-			elseif ($Object -is [PSCustomObject]) {
-				$writer.WriteLine('@{')
-				$indent2 = $script:Indent * ($Depth + 1)
-				foreach($e in $Object.PSObject.Properties) {
-					$key = $e.Name
-					if ($key -match '^\w+$' -and $key -match '^\D') {
-						$writer.Write('{0}{1} = ', $indent2, $key)
-					}
-					else {
-						$writer.Write("{0}'{1}' = ", $indent2, $key.Replace("'", "''"))
-					}
-					Write-Psd $e.Value ($Depth + 1) -NoIndent
-				}
-				$writer.WriteLine("$indent1}" )
 				return
 			}
 			elseif ($Object -is [System.Collections.IList]) {
 				if ($Object.Count) {
-					$writer.WriteLine('@(')
+					$script:Writer.WriteLine('@(')
 					foreach($e in $Object) {
 						Write-Psd $e ($Depth + 1)
 					}
-					$writer.WriteLine("$indent1)" )
+					$script:Writer.WriteLine("$indent1)" )
 				}
 				else {
-					$writer.WriteLine('@()')
+					$script:Writer.WriteLine('@()')
 				}
 				return
 			}
 			elseif ($type -eq [System.Guid] -or $type -eq [System.Version]) {
-				$writer.WriteLine("'{0}'", $Object)
+				$script:Writer.WriteLine("'{0}'", $Object)
 				return
 			}
 			elseif ($type -eq [System.Management.Automation.SwitchParameter]) {
-				$writer.WriteLine($(if ($Object) {'$true'} else {'$false'}))
+				$script:Writer.WriteLine($(if ($Object) {'$true'} else {'$false'}))
+				return
+			}
+			elseif ($type -eq [System.Uri]) {
+				$script:Writer.WriteLine("'{0}'", $Object.ToString().Replace("'", "''"))
+				return
+			}
+			elseif ($Object -is [PSCustomObject]) {
+				$script:Writer.WriteLine('@{')
+				$indent2 = $script:Indent * ($Depth + 1)
+				foreach($e in $Object.PSObject.Properties) {
+					$key = $e.Name
+					if ($key -match '^\w+$' -and $key -match '^\D') {
+						$script:Writer.Write('{0}{1} = ', $indent2, $key)
+					}
+					else {
+						$script:Writer.Write("{0}'{1}' = ", $indent2, $key.Replace("'", "''"))
+					}
+					Write-Psd $e.Value ($Depth + 1) -NoIndent
+				}
+				$script:Writer.WriteLine("$indent1}" )
 				return
 			}
 		}
 		String {
-			$writer.WriteLine("'{0}'", $Object.Replace("'", "''"))
+			$script:Writer.WriteLine("'{0}'", $Object.Replace("'", "''"))
 			return
 		}
 		Boolean {
-			$writer.WriteLine($(if ($Object) {'$true'} else {'$false'}))
+			$script:Writer.WriteLine($(if ($Object) {'$true'} else {'$false'}))
 			return
 		}
 		DateTime {
-			$writer.WriteLine("[DateTime] '{0}'", $Object.ToString('o'))
+			$script:Writer.WriteLine("[DateTime] '{0}'", $Object.ToString('o'))
 			return
 		}
 		Char {
-			$writer.WriteLine("'{0}'", $Object.Replace("'", "''"))
+			$script:Writer.WriteLine("'{0}'", $Object.Replace("'", "''"))
 			return
 		}
 		DBNull {
-			throw 'DBNull is not supported yet.'
+			$script:Writer.WriteLine('$null')
+			return
 		}
 		default {
 			if ($type.IsEnum) {
-				$writer.WriteLine("'{0}'", $Object)
+				$script:Writer.WriteLine("'{0}'", $Object)
 			}
 			else {
-				$writer.WriteLine($Object)
+				$script:Writer.WriteLine($Object)
 			}
 			return
 		}
@@ -370,7 +382,7 @@ function Write-XmlChild($elem, $Depth=0) {
 function Write-XmlElement($elem, $Depth=0) {
 	switch($elem.Name) {
 		NewLine {
-			$writer.WriteLine()
+			$script:Writer.WriteLine()
 			$script:LineStarted = $false
 			break
 		}
@@ -407,10 +419,10 @@ function Write-XmlElement($elem, $Depth=0) {
 		String {
 			if ($elem.GetAttribute('Type') -eq '1') {
 				Write-Text "@'"
-				$writer.WriteLine()
-				$writer.Write($elem.InnerText)
-				$writer.WriteLine()
-				$writer.Write("'@")
+				$script:Writer.WriteLine()
+				$script:Writer.Write($elem.InnerText)
+				$script:Writer.WriteLine()
+				$script:Writer.Write("'@")
 			}
 			else {
 				Write-Text ("'{0}'" -f $elem.InnerText.Replace("'", "''"))
@@ -444,29 +456,36 @@ function New-PsdXml($Script) {
 	$err = $null
 	$tokens = [System.Management.Automation.PSParser]::Tokenize($script, [ref]$err)
 	if ($err) {
-		$err = $err[0]; $t1 = $err.Token
+		$err = $err[0]
+		$t1 = $err.Token
 		throw 'Parser error at {0}:{1} : {2}' -f $t1.StartLine, $t1.StartColumn, $err.Message
 	}
-	$queue = [System.Collections.Queue]$tokens
 
-	$xml = [xml]'<Data/>'
-
+	$indent = ''
 	$lastLine = 0
-	$inferIndent = ''
 	foreach($t1 in $tokens) {
-		if ($t1.StartLine -eq $lastLine) {continue}
-		if ($t1.Type -eq 'NewLine' -or $t1.Type -eq 'Comment') {continue}
-		if ($t1.StartColumn -eq 2) {$inferIndent = '1'; break}
-		if ($t1.StartColumn -eq 3) {$inferIndent = '2'; break}
+		if ($t1.StartLine -eq $lastLine -or $t1.Type -eq 'NewLine' -or $t1.Type -eq 'Comment') {continue}
+		if ($t1.StartColumn -eq 2) {$indent = '1'; break}
+		if ($t1.StartColumn -eq 3) {$indent = '2'; break}
 		if ($t1.StartColumn -gt 1) {break}
 		$lastLine = $t1.StartLine
 	}
-	if ($inferIndent) {
-		$xml.DocumentElement.SetAttribute('Indent', $inferIndent)
+
+	$xml = [xml]'<Data/>'
+	if ($indent) {
+		$xml.DocumentElement.SetAttribute('Indent', $indent)
 	}
 
-	Add-Data $xml.DocumentElement
-	$xml
+	$script:Queue = [System.Collections.Queue]$tokens
+	$script:Script = $Script
+	try {
+		Add-Data $xml.DocumentElement
+		$xml
+	}
+	finally {
+		$script:Queue = $null
+		$script:Script = $null
+	}
 }
 
 # Add just one String, Number, Variable, Table, or Array.
@@ -475,7 +494,7 @@ function Add-Value($elem, $t1) {
 		String {
 			$e = Add-XmlElement $elem String
 			$e.InnerText = $t1.Content
-			if ($t1.EndLine - $t1.StartLine) {
+			if ($script:Script[$t1.Start] -eq '@' -and $script:Script[$t1.Start + 1] -eq "'") {
 				$e.SetAttribute('Type', 1)
 			}
 			break
@@ -511,7 +530,7 @@ function Add-Value($elem, $t1) {
 			$v = $t1.Content
 			#! v2 has no []
 			$e.SetAttribute('Type', $(if ($v[0] -eq '[') {$v} else {"[$v]"}))
-			$t2 = $queue.Dequeue()
+			$t2 = $script:Queue.Dequeue()
 			Add-Value $e $t2
 		}
 		default {
@@ -522,8 +541,8 @@ function Add-Value($elem, $t1) {
 
 # Add data to the array element.
 function Add-Array($elem) {
-	while($queue.Count) {
-		$t1 = $queue.Dequeue()
+	while($script:Queue.Count) {
+		$t1 = $script:Queue.Dequeue()
 		switch($t1.Type) {
 			GroupEnd {
 				return
@@ -565,14 +584,14 @@ function Add-Item($elem, $t1, $Type) {
 		$elem.SetAttribute('Type', $Type)
 	}
 
-	$t1 = $queue.Dequeue()
+	$t1 = $script:Queue.Dequeue()
 	if ($t1.Type -ne 'Operator' -or $t1.Content -ne '=') {
 		ThrowUnexpectedToken $t1
 	}
 
 	$valueAdded = $false
-	while($queue.Count) {
-		$t1 = $queue.Peek()
+	while($script:Queue.Count) {
+		$t1 = $script:Queue.Peek()
 		switch ($t1.Type) {
 			GroupEnd {
 				return
@@ -582,19 +601,19 @@ function Add-Item($elem, $t1, $Type) {
 			}
 			NewLine {
 				if ($valueAdded) {return}
-				$null = $queue.Dequeue()
+				$null = $script:Queue.Dequeue()
 				$null = Add-XmlElement $elem NewLine
 				break
 			}
 			Comment {
-				$null = $queue.Dequeue()
+				$null = $script:Queue.Dequeue()
 				$e = Add-XmlElement $elem Comment
 				$e.InnerText = $t1.Content
 				break
 			}
 			Operator {
 				if ($t1.Content -eq ',') {
-					$null = $queue.Dequeue()
+					$null = $script:Queue.Dequeue()
 					$null = Add-XmlElement $elem Comma
 				}
 				else {
@@ -603,7 +622,7 @@ function Add-Item($elem, $t1, $Type) {
 				break
 			}
 			default {
-				$null = $queue.Dequeue()
+				$null = $script:Queue.Dequeue()
 				$valueAdded = $true
 				Add-Value $elem $t1
 			}
@@ -612,8 +631,8 @@ function Add-Item($elem, $t1, $Type) {
 }
 
 function Add-Table($elem) {
-	while($queue.Count) {
-		$t1 = $queue.Dequeue()
+	while($script:Queue.Count) {
+		$t1 = $script:Queue.Dequeue()
 		switch($t1.Type) {
 			GroupEnd {
 				return
@@ -651,8 +670,8 @@ function Add-Table($elem) {
 }
 
 function Add-Data($elem) {
-	while($queue.Count) {
-		$t1 = $queue.Dequeue()
+	while($script:Queue.Count) {
+		$t1 = $script:Queue.Dequeue()
 		switch($t1.Type) {
 			NewLine {
 				$null = Add-XmlElement $elem NewLine
@@ -686,14 +705,14 @@ function Add-Data($elem) {
 function Write-Text($Text, [switch]$NoSpace) {
 	if ($script:LineStarted) {
 		if (!$NoSpace) {
-			$writer.Write(' ')
+			$script:Writer.Write(' ')
 		}
 	}
 	else {
 		$script:LineStarted = $true
-		$writer.Write($script:Indent * $Depth)
+		$script:Writer.Write($script:Indent * $Depth)
 	}
-	$writer.Write($Text)
+	$script:Writer.Write($Text)
 }
 
 function New-Number($Text) {

@@ -27,8 +27,8 @@ task Test6 -If $env:powershell6 {
 
 # Synopsis: Build help by https://github.com/nightroman/Helps
 task Help @{
-	Outputs = 'PsdKit-Help.xml'
 	Inputs = 'PsdKit.psm1', 'PsdKit-Help.ps1'
+	Outputs = 'PsdKit-Help.xml'
 	Jobs = {
 		. Helps.ps1
 		Import-Module PsdKit
@@ -36,13 +36,19 @@ task Help @{
 	}
 }
 
+# Synopsis: Build this module manifest from the template.
+task Manifest @{
+	Inputs = 'PsdKit.psm1', 'Release-Notes.md', 'Examples\Build-Manifest.ps1'
+	Outputs = 'PsdKit.psd1'
+	Jobs = {Examples\Build-Manifest.ps1}
+}
+
 # Synopsis: Tests versions.
 task Version {
-	($version1 = .{ switch -Regex -File Release-Notes.md {'##\s+v(\d+\.\d+\.\d+)' {return $Matches[1]}} })
-	assert $version1
-	Import-Module PsdKit
-	$version2 = (Import-Psd PsdKit.psd1).ModuleVersion
-	equals $version1 $version2
+	$version = switch -Regex -File Release-Notes.md {'##\s+v(\d+\.\d+\.\d+)' {$Matches[1]; break}}
+	assert $version
+	($version2 = (Import-Psd PsdKit.psd1).ModuleVersion)
+	equals $version $version2
 }
 
 # Synopsis: Copy scripts to the project.
@@ -77,4 +83,4 @@ task Clean {
 	Remove-Item -Force -Recurse
 }
 
-task . UpdateScript, Help, Test
+task . UpdateScript, Manifest, Help, Test

@@ -27,19 +27,19 @@ LONG DESCRIPTION
         - New lines, comments, and separators are preserved.
         - Spaces and tabs are not necessarily preserved.
         - The order of values is preserved.
-        - Supported value types:
+        - Supported data:
+            - Table
+                @{} with items separated by new lines or semicolons
+            - Array
+                @() with values separated by new lines or commas
             - String
-                single quoted '' or single quoted here-string @''@
-                other strings are converted to one of single quoted
+                single quoted simple or verbatim strings are preserved,
+                other strings are saved as single quoted simple strings
             - Number
                 numbers with optional hex notation and suffixes
             - Variable
                 $null, $true, $false
                 other variables are supported but unusual in psd1
-            - Table
-                `key=value` separated by new lines or semicolons
-            - Array
-                @() with new line and comma separated values
             - Cast
                 Expressions like [DateTime] '2018-01-01'
 

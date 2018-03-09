@@ -131,7 +131,27 @@ task GuidAndVersion {
 	equals $r "'1.2.3'"
 }
 
+# In psd1, `[DBNull]::Value` is not allowed and `[DBNull] $null` is just $null.
+# We do not have much choice, let's just write `$null` until it is a problem.
 task DBNull {
-	($r = try {[DBNull]::Value | ConvertTo-Psd} catch {$_})
-	equals "$r" 'DBNull is not supported yet.'
+	($r = [DBNull]::Value | ConvertTo-Psd)
+	equals $r '$null'
+}
+
+#! found on PSGetModuleInfo.xml clixml to psd1
+task Uri {
+	($r = [uri]'bar' | ConvertTo-Psd)
+	equals $r "'bar'"
+}
+
+#! found on PSGetModuleInfo.xml clixml to psd1
+task IListBeforePSCustomObject {
+	@{Tags = 'tag1', 'tag2'} | Export-Clixml z.clixml
+	$r = Import-Clixml z.clixml
+
+	#! fixed
+	($r | ConvertTo-Psd)
+	Test-Hash $r 9a63cc449e6068a2f7ec217bb4543eb2
+
+	Remove-Item z.clixml
 }

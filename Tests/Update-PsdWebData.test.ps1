@@ -50,6 +50,6 @@ task Basic {
 
 task MissingPath {
 	($r = try {Update-PsdWebData.ps1 missing.psd1} catch {$_})
-	equals "$r" "Cannot find path 'missing.psd1' because it does not exist."
+	assert ("$r" -like "Could not find file '*\missing.psd1'.")
 	equals $r.FullyQualifiedErrorId Update-PsdWebData.ps1
 }

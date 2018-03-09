@@ -1,6 +1,13 @@
 
 # PsdKit Release Notes
 
+## v0.2.0
+
+- Amend import/export of strings, #3.
+- Add *Examples/Build-Manifest.ps1*.
+- Export `System.Uri` as string.
+- Export `DBNull` as `$null`.
+
 ## v0.1.0
 
 - `ConvertTo-Psd`
