@@ -9,7 +9,7 @@ function Convert-PsdToXml {
 		[string] $InputObject
 	)
 	process {
-		trap {ThrowTerminatingError($_)}
+		trap {ThrowTerminatingError $_}
 		New-PsdXml $InputObject
 	}
 }
@@ -22,7 +22,7 @@ function Convert-XmlToPsd {
 		[System.Xml.XmlNode] $Xml,
 		[string] $Indent
 	)
-	trap {ThrowTerminatingError($_)}
+	trap {ThrowTerminatingError $_}
 
 	if (!$Indent) {
 		if (!($doc = $Xml.OwnerDocument)) {$doc = $Xml}
@@ -55,6 +55,7 @@ function ConvertTo-Psd {
 	param(
 		[Parameter(Position=0, ValueFromPipeline=1)]
 		$InputObject,
+		[int] $Depth,
 		[string] $Indent
 	)
 	begin {
@@ -64,8 +65,10 @@ function ConvertTo-Psd {
 		$objects.Add($InputObject)
 	}
 	end {
-		trap {ThrowTerminatingError($_)}
+		trap {ThrowTerminatingError $_}
 
+		$script:Depth = $Depth
+		$script:Pruned = 0
 		$script:Indent = Convert-Indent $Indent
 		$script:Writer = New-Object System.IO.StringWriter
 		try {
@@ -73,6 +76,7 @@ function ConvertTo-Psd {
 				Write-Psd $object
 			}
 			$script:Writer.ToString().TrimEnd()
+			if ($script:Pruned) {Write-Warning "ConvertTo-Psd truncated $script:Pruned objects."}
 		}
 		finally {
 			$script:Writer = $null
@@ -89,7 +93,7 @@ function Export-PsdXml {
 		[System.Xml.XmlNode] $Xml,
 		[string] $Indent
 	)
-	trap {ThrowTerminatingError($_)}
+	trap {ThrowTerminatingError $_}
 	$Path = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Path)
 	[System.IO.File]::WriteAllText($Path, (Convert-XmlToPsd $Xml -Indent $Indent), ([System.Text.Encoding]::UTF8))
 }
@@ -102,7 +106,7 @@ function Get-PsdXml {
 		[Parameter(Position=1)]
 		[string] $XPath
 	)
-	trap {ThrowTerminatingError($_)}
+	trap {ThrowTerminatingError $_}
 	if ($XPath) {
 		$node = $xml.SelectSingleNode($XPath)
 		if (!$node) {throw "XPath selects nothing: '$XPath'."}
@@ -150,7 +154,7 @@ function Import-Psd {
 		[Parameter(Position=0, Mandatory=1)]
 		[string] $Path
 	)
-	trap {ThrowTerminatingError($_)}
+	trap {ThrowTerminatingError $_}
 	$Path = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Path)
 	Import-LocalizedData -BaseDirectory ([System.IO.Path]::GetDirectoryName($Path)) -FileName ([System.IO.Path]::GetFileName($Path)) -BindingVariable r
 	$r
@@ -163,7 +167,7 @@ function Import-PsdXml {
 		[Parameter(Mandatory=1)]
 		[string] $Path
 	)
-	trap {ThrowTerminatingError($_)}
+	trap {ThrowTerminatingError $_}
 	$script = [System.IO.File]::ReadAllText($PSCmdlet.GetUnresolvedProviderPathFromPSPath($Path))
 	New-PsdXml $script
 }
@@ -180,7 +184,7 @@ function Set-PsdXml {
 		[Parameter(Position=2)]
 		[string] $XPath
 	)
-	trap {ThrowTerminatingError($_)}
+	trap {ThrowTerminatingError $_}
 	if ($XPath) {
 		$node = $xml.SelectSingleNode($XPath)
 		if (!$node) {throw 'XPath selects nothing.'}
@@ -264,7 +268,24 @@ function Write-Psd($Object, $Depth=0, [switch]$NoIndent) {
 	$type = $Object.GetType()
 	switch([System.Type]::GetTypeCode($type)) {
 		Object {
-			if ($Object -is [System.Collections.IDictionary]) {
+			if ($type -eq [System.Guid] -or $type -eq [System.Version]) {
+				$script:Writer.WriteLine("'{0}'", $Object)
+				return
+			}
+			elseif ($type -eq [System.Management.Automation.SwitchParameter]) {
+				$script:Writer.WriteLine($(if ($Object) {'$true'} else {'$false'}))
+				return
+			}
+			elseif ($type -eq [System.Uri]) {
+				$script:Writer.WriteLine("'{0}'", $Object.ToString().Replace("'", "''"))
+				return
+			}
+			elseif ($script:Depth -and $Depth -ge $script:Depth) {
+				$script:Writer.WriteLine("''''")
+				++$script:Pruned
+				return
+			}
+			elseif ($Object -is [System.Collections.IDictionary]) {
 				if ($Object.Count) {
 					$script:Writer.WriteLine('@{')
 					$indent2 = $script:Indent * ($Depth + 1)
@@ -297,32 +318,25 @@ function Write-Psd($Object, $Depth=0, [switch]$NoIndent) {
 				}
 				return
 			}
-			elseif ($Object -is [System.Collections.IList]) {
-				if ($Object.Count) {
-					$script:Writer.WriteLine('@(')
-					foreach($e in $Object) {
-						Write-Psd $e ($Depth + 1)
+			elseif ($Object -is [System.Collections.IEnumerable]) {
+				$script:Writer.Write('@(')
+				$empty = $true
+				foreach($e in $Object) {
+					if ($empty) {
+						$empty = $false
+						$script:Writer.WriteLine()
 					}
-					$script:Writer.WriteLine("$indent1)" )
+					Write-Psd $e ($Depth + 1)
+				}
+				if ($empty) {
+					$script:Writer.WriteLine(')')
 				}
 				else {
-					$script:Writer.WriteLine('@()')
+					$script:Writer.WriteLine("$indent1)" )
 				}
 				return
 			}
-			elseif ($type -eq [System.Guid] -or $type -eq [System.Version]) {
-				$script:Writer.WriteLine("'{0}'", $Object)
-				return
-			}
-			elseif ($type -eq [System.Management.Automation.SwitchParameter]) {
-				$script:Writer.WriteLine($(if ($Object) {'$true'} else {'$false'}))
-				return
-			}
-			elseif ($type -eq [System.Uri]) {
-				$script:Writer.WriteLine("'{0}'", $Object.ToString().Replace("'", "''"))
-				return
-			}
-			elseif ($Object -is [PSCustomObject]) {
+			elseif ($Object -is [PSCustomObject] -or $script:Depth) {
 				$script:Writer.WriteLine('@{')
 				$indent2 = $script:Indent * ($Depth + 1)
 				foreach($e in $Object.PSObject.Properties) {
@@ -613,6 +627,7 @@ function Add-Item($elem, $t1, $Type) {
 			}
 			Operator {
 				if ($t1.Content -eq ',') {
+					$valueAdded = $false
 					$null = $script:Queue.Dequeue()
 					$null = Add-XmlElement $elem Comma
 				}

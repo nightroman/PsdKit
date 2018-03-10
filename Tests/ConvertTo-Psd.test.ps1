@@ -145,7 +145,7 @@ task Uri {
 }
 
 #! found on PSGetModuleInfo.xml clixml to psd1
-task IListBeforePSCustomObject {
+task IEnumerableBeforePSCustomObject {
 	@{Tags = 'tag1', 'tag2'} | Export-Clixml z.clixml
 	$r = Import-Clixml z.clixml
 
@@ -154,4 +154,36 @@ task IListBeforePSCustomObject {
 	Test-Hash $r 9a63cc449e6068a2f7ec217bb4543eb2
 
 	Remove-Item z.clixml
+}
+
+# Some data are IEnumerable but not IList or ICollection.
+# It's unlikely that we have such cases on serialisation.
+# But on object dumps everything is possible.
+task IEnumerableInsteadOfICollection -If ($Version -ge 5) {
+	$data = @{x = [IO.Directory]::EnumerateFiles($BuildRoot, 'ConvertTo-Psd.test.ps1')}
+	($r = ConvertTo-Psd $data)
+	$r = Invoke-Expression $r
+	equals $r.x.GetType() ([object[]])
+	equals $r.x.Count 1
+	equals $r.x[0] $BuildFile
+}
+
+# Dump any objects with the parameter Depth, #4.
+# NB 2 module warnings are not recorded by IB.
+task Depth {
+	# no Depth -> not supported
+	($r = try {$Host | ConvertTo-Psd} catch {$_})
+	assert ("$r" -like 'Not supported type *')
+
+	# Depth 1 -> 1 level
+	($r = $Host | ConvertTo-Psd -Depth 1)
+	$r = Invoke-Expression $r
+	equals $r.Name $Host.Name
+	equals $r.Runspace ''''
+
+	# Depth 2 -> 2 levels
+	($r = $Host | ConvertTo-Psd -Depth 2)
+	$r = Invoke-Expression $r
+	equals ([guid]$r.Runspace.InstanceId) $Host.Runspace.InstanceId
+	equals $r.Runspace.RunspaceStateInfo ''''
 }

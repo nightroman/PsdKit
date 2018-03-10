@@ -1,6 +1,12 @@
 
 # PsdKit Release Notes
 
+## v0.3.0
+
+- Convert any objects if the new parameter `Depth` is used, #4.
+- Improve conversion of collections, support `IEnumerable`.
+- Add *Examples/StronglyTypedData.ps1*.
+
 ## v0.2.0
 
 - Amend import/export of strings, #3.

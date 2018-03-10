@@ -19,7 +19,8 @@ For more details, see the online version of [about_PsdKit.help.txt](https://gith
 
 See also [Examples](https://github.com/nightroman/PsdKit/blob/master/Examples):
 
-- [Build-Manifest.ps1] - Builds this module manifest automatically.
+- [Build-Manifest.ps1] - Builds the module manifest automatically.
+- [StronglyTypedData.ps1] - Export/import using PowerShell classes.
 - [Update-PsdWebData.ps1] - Updates "web data islands" in psd1 files.
 
 ## How to install and get help
@@ -38,4 +39,5 @@ Get help for individual commands:
     help ConvertTo-Psd -Full
 
 [Build-Manifest.ps1]: https://github.com/nightroman/PsdKit/blob/master/Examples/Build-Manifest.ps1
+[StronglyTypedData.ps1]: https://github.com/nightroman/PsdKit/blob/master/Examples/StronglyTypedData.ps1
 [Update-PsdWebData.ps1]: https://github.com/nightroman/PsdKit/blob/master/Examples/Update-PsdWebData.ps1

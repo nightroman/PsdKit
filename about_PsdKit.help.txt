@@ -61,6 +61,11 @@ LONG DESCRIPTION
         when you change data and save.
 
 EXAMPLE
+    Dump object properties
+
+        $Host | ConvertTo-Psd -Depth 2
+
+EXAMPLE
     Write and read psd1 log file
 
         # Append log records several times
@@ -68,6 +73,15 @@ EXAMPLE
 
         # Read log records
         Import-Psd log.psd1
+
+EXAMPLE
+    Convert JSON to psd1
+
+        # some data
+        $json = $Host | ConvertTo-Json -Depth 1
+
+        # convert to psd1
+        $json | ConvertFrom-Json | ConvertTo-Psd
 
 EXAMPLE
     Change the version in a psd1 module manifest
@@ -80,11 +94,6 @@ EXAMPLE
 
         # Save changed PSD-XML
         Export-PsdXml $FilePath $xml
-
-EXAMPLE
-    Convert JSON to psd1
-
-        $Host | ConvertTo-Json -Depth 1 | ConvertFrom-Json | ConvertTo-Psd
 
 PSD-XML SCHEMA
     With recommended Get-PsdXml and Set-PsdXml you do not have to know much

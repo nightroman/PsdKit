@@ -107,24 +107,34 @@ $GetSetXPath = @'
 	command = 'ConvertTo-Psd'
 	synopsis = 'Converts objects to a psd1-formatted strings.'
 	description = @'
-	Supported objects:
+	This command converts objects to strings in PowerShell data (psd1) format.
+
+	Supported objects in normal mode (use Depth for all objects):
 		- [System.Collections.IDictionary] -> @{}
-		- [System.Collections.IList] -> @()
+		- [System.Collections.IEnumerable] -> @()
 		- [PSCustomObject] -> @{}
+
 	Supported values:
-		- [string], [char], [guid], [version], enum -> single quoted string
+		- [string], [guid], [version], [char], [uri], enum -> single quoted
 		- [DateTime] -> [DateTime] x.ToString('o')
 		- [bool] -> $true and $false
 		- number -> x.ToString()
-		- $null
+		- null -> $null
 
 	Note that the result string does not include the trailing new line. Thus,
 	if you use ConvertTo-Psd with some Set-Content (save) or Add-Content (log)
 	then you do not have to use -NoNewLine, it is added by these commands. But
-	on saving in some other ways you may need to add a new line.
+	on saving by other methods you may need to add a new line.
 '@
 	parameters = @{
-		InputObject = 'The input object to be converted or objects from the pipeline.'
+		InputObject = @'
+		The input object to be converted or objects from the pipeline.
+'@
+		Depth = @'
+		Tells to convert all objects and specifies the maximum depth. Truncated
+		objects are written as ''''. The default value is 0 for supported types
+		with the depth limited by the PowerShell call stack.
+'@
 		Indent = @"
 	Specifies the indent string. By default it is four spaces.
 
@@ -151,6 +161,12 @@ $IndentSpecial
 
     # Read log records
     Import-Psd log.psd1
+			}
+		}
+		@{
+			code = {
+    # Browse through $Host data
+    $Host | ConvertTo-Psd -Depth 3
 			}
 		}
 	)

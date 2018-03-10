@@ -102,3 +102,26 @@ line2
 ''@'
 "@
 }
+
+# Fixed in v0.3.0
+task ItemCommaNewLine {
+	$psd1 = @'
+@{
+  x = 'v1',
+    'v2', 'v3'
+}
+'@
+	$psd1
+
+	#! fixed "unexpected comma"
+	$xml = Convert-PsdToXml $psd1
+	#! @() is for PS v2
+	$r = @($xml.SelectNodes('Data/Table/Item/String'))
+	equals $r.Count 3
+	equals $r[0].InnerText v1
+	equals $r[1].InnerText v2
+	equals $r[2].InnerText v3
+
+	($r = Convert-XmlToPsd $xml)
+	Test-Hash $r b83044d14c4b5ea5082dedf208cf2e27
+}
