@@ -64,8 +64,8 @@ $GetSetXPath = @'
 		@{ text = 'Convert-XmlToPsd' }
 		@{ text = 'Export-PsdXml' }
 		@{ text = 'Import-PsdXml' }
-		@{ text = 'Get-PsdXml' }
-		@{ text = 'Set-PsdXml' }
+		@{ text = 'Get-Psd' }
+		@{ text = 'Set-Psd' }
 	)
 }
 
@@ -97,8 +97,8 @@ $GetSetXPath = @'
 		@{ text = 'Convert-PsdToXml' }
 		@{ text = 'Export-PsdXml' }
 		@{ text = 'Import-PsdXml' }
-		@{ text = 'Get-PsdXml' }
-		@{ text = 'Set-PsdXml' }
+		@{ text = 'Get-Psd' }
+		@{ text = 'Set-Psd' }
 	)
 }
 
@@ -194,20 +194,20 @@ $IndentSpecial
 		@{ text = 'Convert-PsdToXml' }
 		@{ text = 'Convert-XmlToPsd' }
 		@{ text = 'Import-PsdXml' }
-		@{ text = 'Get-PsdXml' }
-		@{ text = 'Set-PsdXml' }
+		@{ text = 'Get-Psd' }
+		@{ text = 'Set-Psd' }
 	)
 }
 
-### Get-PsdXml command help
+### Get-Psd command help
 @{
-	command = 'Get-PsdXml'
+	command = 'Get-Psd'
 	synopsis = 'Gets node PowerShell data.'
 	description = @'
 	This command parses and returns the specified node value. It does not
 	invoke any psd1 code, this is safe like importing psd1 in a usual way.
 
-	Returned values depend on node types:
+	Returned values for node types:
 
 		String
 			[string]
@@ -222,17 +222,10 @@ $IndentSpecial
 		Cast
 			Values converted to primitive types, e.g. [DateType]
 		Item
-			One of the above values.
+			One of the above values or [object[]] for comma separated values
+			without @() notation.
 		Comment
 			[string]
-
-	Node children must not include comments, commas, and semicolons. In other
-	words, Get-PsdXml guarantees that comments and separators are not lost on
-	using Set-PsdXml.
-
-	Nodes with included comments, commas, and semicolons should be treated as
-	usual XML with special PSD structure. This is fiddly and error prone but
-	doable. Yet it is easier to keep some parts of psd1 simple for Get-PsdXml.
 
 	For more details about PSD-XML scenarios see
 
@@ -243,12 +236,18 @@ $IndentSpecial
 		Xml = $GetSetXml
 		XPath = $GetSetXPath
 	}
+	outputs = @(
+		@{
+			type = '[object]'
+			description = 'Data represented by the input node.'
+		}
+	)
 	links = @(
 		@{ text = 'Convert-PsdToXml' }
 		@{ text = 'Convert-XmlToPsd' }
 		@{ text = 'Export-PsdXml' }
 		@{ text = 'Import-PsdXml' }
-		@{ text = 'Set-PsdXml' }
+		@{ text = 'Set-Psd' }
 	)
 }
 
@@ -296,14 +295,14 @@ $IndentSpecial
 		@{ text = 'Convert-PsdToXml' }
 		@{ text = 'Convert-XmlToPsd' }
 		@{ text = 'Export-PsdXml' }
-		@{ text = 'Get-PsdXml' }
-		@{ text = 'Set-PsdXml' }
+		@{ text = 'Get-Psd' }
+		@{ text = 'Set-Psd' }
 	)
 }
 
-### Set-PsdXml command help
+### Set-Psd command help
 @{
-	command = 'Set-PsdXml'
+	command = 'Set-Psd'
 	synopsis = 'Sets node PowerShell data.'
 	description = @'
 	This command converts data to XML using ConvertTo-Psd and Convert-PsdToXml.
@@ -325,6 +324,6 @@ $IndentSpecial
 		@{ text = 'Convert-XmlToPsd' }
 		@{ text = 'Export-PsdXml' }
 		@{ text = 'Import-PsdXml' }
-		@{ text = 'Get-PsdXml' }
+		@{ text = 'Get-Psd' }
 	)
 }

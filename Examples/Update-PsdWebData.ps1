@@ -44,19 +44,19 @@ $change = 0
 
 # for all web data nodes, i.e. tables with items "DataUrl"
 foreach($DataUrlNode in $xml.SelectNodes('//Item[@Key="DataUrl"]')) {
-	$url = Get-PsdXml $DataUrlNode
+	$url = Get-Psd $DataUrlNode
 	$res = Invoke-RestMethod $url
 	$DataItemNode = @($DataUrlNode.SelectNodes('../Item[@Key="Data"]/Table/Item'))
 	if ($DataItemNode) {
 		# update each changed item
 		foreach($DataItemNode in $DataItemNode) {
-			$value1 = Get-PsdXml $DataItemNode
+			$value1 = Get-Psd $DataItemNode
 			$key = $DataItemNode.Key
 			$value2 = $res.$key
 			if (![string]::Equals((ConvertTo-Psd $value1), (ConvertTo-Psd $value2))) {
 				++$change
 				"$url $key $value1 -> $value2"
-				Set-PsdXml $DataItemNode $value2
+				Set-Psd $DataItemNode $value2
 			}
 		}
 	}
@@ -64,7 +64,7 @@ foreach($DataUrlNode in $xml.SelectNodes('//Item[@Key="DataUrl"]')) {
 		# set the whole object
 		++$change
 		"$url updated"
-		Set-PsdXml $DataUrlNode $res '../Item[@Key="Data"]'
+		Set-Psd $DataUrlNode $res '../Item[@Key="Data"]'
 	}
 }
 

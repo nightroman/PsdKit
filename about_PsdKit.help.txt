@@ -18,8 +18,8 @@ LONG DESCRIPTION
         - Convert-XmlToPsd - Converts PSD-XML to a psd1 string.
         - Export-PsdXml - Exports PSD-XML to a psd1 file.
         - Import-PsdXml - Imports a psd1 file as PSD-XML.
-        - Get-PsdXml - Gets node PowerShell data.
-        - Set-PsdXml - Sets node PowerShell data.
+        - Get-Psd - Gets node PowerShell data.
+        - Set-Psd - Sets node PowerShell data.
 
     PSD-XML import/export scenarios:
 
@@ -45,7 +45,7 @@ LONG DESCRIPTION
 
     PSD-XML get/set scenarios:
 
-        Get-PsdXml and Set-PsdXml work well if you compose the changeable
+        Get-Psd and Set-Psd work well if you compose the changeable
         parts of psd1 properly. Namely:
 
             - avoid comments
@@ -90,13 +90,13 @@ EXAMPLE
         $xml = Import-PsdXml $FilePath
 
         # Set the new version
-        Set-PsdXml $xml 1.0.2 'Data/Table/Item[@Key="ModuleVersion"]'
+        Set-Psd $xml 1.0.2 'Data/Table/Item[@Key="ModuleVersion"]'
 
         # Save changed PSD-XML
         Export-PsdXml $FilePath $xml
 
 PSD-XML SCHEMA
-    With recommended Get-PsdXml and Set-PsdXml you do not have to know much
+    With recommended Get-Psd and Set-Psd you do not have to know much
     details about the schema, they operate with native PowerShell data. But
     for some XPath paths, normally simple, some understanding is needed.
 

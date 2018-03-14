@@ -1,5 +1,5 @@
 
-. ./About.ps1 Set-PsdXml
+. ./About.ps1 Set-Psd
 
 task SetValueManual {
 	$xml = {
@@ -28,9 +28,9 @@ task SetValueXPath {
 		}
 	} | Convert-PsdToXml
 
-	Set-PsdXml $xml '#changed' 'Data/Table/Comment'
-	Set-PsdXml $xml 'another name' 'Data/Table/Item[@Key="name"]'
-	Set-PsdXml $xml 2.2.2 'Data/Table/Item[@Key="version"]'
+	Set-Psd $xml '#changed' 'Data/Table/Comment'
+	Set-Psd $xml 'another name' 'Data/Table/Item[@Key="name"]'
+	Set-Psd $xml 2.2.2 'Data/Table/Item[@Key="version"]'
 	($r = Convert-XmlToPsd $xml)
 	Test-Hash $r e648dcba706c19d93766355722bf48c8
 }
@@ -44,9 +44,9 @@ task SetValueNode {
 		}
 	} | Convert-PsdToXml
 
-	Set-PsdXml $xml.SelectSingleNode('Data/Table/Comment') '#changed'
-	Set-PsdXml $xml.SelectSingleNode('Data/Table/Item[@Key="name"]') another
-	Set-PsdXml $xml.SelectSingleNode('Data/Table/Item[@Key="answer"]') 'text'
+	Set-Psd $xml.SelectSingleNode('Data/Table/Comment') '#changed'
+	Set-Psd $xml.SelectSingleNode('Data/Table/Item[@Key="name"]') another
+	Set-Psd $xml.SelectSingleNode('Data/Table/Item[@Key="answer"]') 'text'
 
 	($r = Convert-XmlToPsd $xml)
 	Test-Hash $r 2823a2ef520d53b705d006da5cd183a4
@@ -57,12 +57,12 @@ task SetNotItem {
 	$xml = Convert-PsdToXml '@{x = 42}'
 
 	# old type
-	Set-PsdXml $xml.SelectSingleNode('Data/Table/Item[@Key="x"]/Number') 99
+	Set-Psd $xml.SelectSingleNode('Data/Table/Item[@Key="x"]/Number') 99
 	($r = $xml.InnerXml)
 	equals $r '<Data><Table><Item Key="x"><Number>99</Number></Item></Table></Data>'
 
 	# new type
-	Set-PsdXml $xml.SelectSingleNode('Data/Table/Item[@Key="x"]/Number') text
+	Set-Psd $xml.SelectSingleNode('Data/Table/Item[@Key="x"]/Number') text
 	($r = $xml.InnerXml)
 	equals $r '<Data><Table><Item Key="x"><String>text</String></Item></Table></Data>'
 }
@@ -76,13 +76,13 @@ task SetCommentGood {
 	} | Convert-PsdToXml
 
 	$node = $xml.SelectSingleNode('//Comment')
-	equals (Get-PsdXml $node) '#comment1'
+	equals (Get-Psd $node) '#comment1'
 
-	Set-PsdXml $node '#comment2'
-	equals (Get-PsdXml $node) '#comment2'
+	Set-Psd $node '#comment2'
+	equals (Get-Psd $node) '#comment2'
 
-	Set-PsdXml $node '<#comment3#>'
-	equals (Get-PsdXml $node) '<#comment3#>'
+	Set-Psd $node '<#comment3#>'
+	equals (Get-Psd $node) '<#comment3#>'
 
 	($r = Convert-XmlToPsd $xml)
 	Test-Hash $r d380fc73d0cd10c19680276809567425
@@ -97,21 +97,21 @@ task SetCommentBad {
 	} | Convert-PsdToXml
 
 	$node = $xml.SelectSingleNode('//Comment')
-	equals (Get-PsdXml $node) '#comment1'
+	equals (Get-Psd $node) '#comment1'
 
-	($r = try {Set-PsdXml $node 42} catch {$_})
+	($r = try {Set-Psd $node 42} catch {$_})
 	equals "$r" 'Comment must be a string.'
-	equals $r.FullyQualifiedErrorId Set-PsdXml
+	equals $r.FullyQualifiedErrorId Set-Psd
 
-	($r = try {Set-PsdXml $node "#bar`n"} catch {$_})
+	($r = try {Set-Psd $node "#bar`n"} catch {$_})
 	equals "$r" 'Line comment must be one line.'
-	equals $r.FullyQualifiedErrorId Set-PsdXml
+	equals $r.FullyQualifiedErrorId Set-Psd
 
-	($r = try {Set-PsdXml $node '<#bar'} catch {$_})
+	($r = try {Set-Psd $node '<#bar'} catch {$_})
 	equals "$r" "Block comment must end with '#>'."
-	equals $r.FullyQualifiedErrorId Set-PsdXml
+	equals $r.FullyQualifiedErrorId Set-Psd
 
-	($r = try {Set-PsdXml $node 'bar'} catch {$_})
+	($r = try {Set-Psd $node 'bar'} catch {$_})
 	equals "$r" 'Comment must be line #... or block <#...#>.'
-	equals $r.FullyQualifiedErrorId Set-PsdXml
+	equals $r.FullyQualifiedErrorId Set-Psd
 }

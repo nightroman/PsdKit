@@ -1,6 +1,13 @@
 
 # PsdKit Release Notes
 
+## v0.4.0
+
+- Rename `Get-PsdXml` to `Get-Psd`, `Set-PsdXml` to `Set-Psd`.
+- `Get-Psd`
+    - Skip non-data nodes like comments, commas, ...
+    - Treat document and root nodes, too.
+
 ## v0.3.0
 
 - Convert any objects if the new parameter `Depth` is used, #4.

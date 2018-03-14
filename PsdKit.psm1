@@ -99,7 +99,7 @@ function Export-PsdXml {
 }
 
 #.ExternalHelp PsdKit-Help.xml
-function Get-PsdXml {
+function Get-Psd {
 	param(
 		[Parameter(Position=0, Mandatory=1)]
 		[System.Xml.XmlNode] $Xml,
@@ -114,35 +114,39 @@ function Get-PsdXml {
 	else {
 		$node = $Xml
 	}
-	if ($node.NodeType -ne 'Element') {throw "Unexpected node type '$($node.NodeType)'."}
 	switch($node.Name) {
 		Item {
-			if ($node.ChildNodes.Count -ne 1) {throw "Element 'Item' must have one child node."}
-			return Get-PsdXml $node.FirstChild
+			return New-ItemPsd $node
 		}
 		String {
 			return $node.InnerText
 		}
 		Number {
-			return New-Number $node.InnerText
+			return New-NumberPsd $node.InnerText
 		}
 		Variable {
-			return New-Variable $node.InnerText
+			return New-VariablePsd $node.InnerText
 		}
 		Comment {
 			return $node.InnerText
 		}
 		Array {
-			return New-Array $node
+			return New-ArrayPsd $node
 		}
 		Table {
-			return New-Table $node
+			return New-TablePsd $node
 		}
 		Cast {
-			return New-Cast $node
+			return New-CastPsd $node
+		}
+		Data {
+			return New-ItemPsd $node
+		}
+		'#document' {
+			return New-ItemPsd $node
 		}
 		default {
-			throw "Not supported element '$_'."
+			throw "Not supported node '$_'."
 		}
 	}
 }
@@ -173,7 +177,7 @@ function Import-PsdXml {
 }
 
 #.ExternalHelp PsdKit-Help.xml
-function Set-PsdXml {
+function Set-Psd {
 	param(
 		[Parameter(Position=0, Mandatory=1)]
 		[System.Xml.XmlNode] $Xml,
@@ -461,7 +465,7 @@ function Write-XmlElement($elem, $Depth=0) {
 			break
 		}
 		default {
-			throw "Unexpected XML element '$_'."
+			throw "Unexpected node '$_'."
 		}
 	}
 }
@@ -730,15 +734,64 @@ function Write-Text($Text, [switch]$NoSpace) {
 	$script:Writer.Write($Text)
 }
 
-function New-Number($Text) {
+function New-TablePsd($node) {
+	$r = [System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase)
+	foreach($node in $node.ChildNodes) {switch($node.Name) {
+		NewLine {break}
+		Item {
+			if ($node.GetAttribute('Type') -eq 'Number') {
+				$key = New-NumberPsd $node.Key
+			}
+			else {
+				$key = $node.Key
+			}
+			$r.Add($key, (New-ItemPsd $node))
+			break
+		}
+		Comment {break}
+		Semicolon {break}
+		default {
+			throw "Table has not supported node '$($node.Name)'."
+		}
+	}}
+	$r
+}
+
+function New-ItemPsd($node) {
+	foreach($node in $node.ChildNodes) {switch($node.Name) {
+		Comma {break}
+		NewLine {break}
+		Comment {break}
+		default {Get-Psd $node}
+	}}
+}
+
+function New-ArrayPsd($node) {
+	$r = [System.Collections.Generic.List[object]]@()
+	foreach($node in $node.ChildNodes) {switch($node.Name) {
+		NewLine {break}
+		String {$r.Add($node.InnerText); break}
+		Number {$r.Add((New-NumberPsd $node.InnerText)); break}
+		Variable {$r.Add((New-VariablePsd $node.InnerText)); break}
+		Table {$r.Add((New-TablePsd $node)); break}
+		Cast {$r.Add((New-CastPsd $node)); break}
+		Comma {break}
+		Comment {break}
+		Semicolon {break}
+		default {throw "Array contains not supported node '$_'."}
+	}}
+	, $r
+}
+
+function New-NumberPsd($Text) {
 	$r = $null
 	if ([int]::TryParse($Text, [ref]$r)) {return $r}
 	if ([long]::TryParse($Text, [ref]$r)) {return $r}
 	if ([double]::TryParse($Text, [ref]$r)) {return $r}
-	throw "Not supported number '$_'."
+	throw "Not supported number '$Text'."
 }
 
-function New-Variable($Text) {
+function New-VariablePsd($Text) {
 	switch($Text) {
 		false {return $false}
 		true {return $true}
@@ -747,47 +800,11 @@ function New-Variable($Text) {
 	}
 }
 
-function New-Cast($node) {
+function New-CastPsd($node) {
 	$typeName = $node.Type.TrimEnd(']').TrimStart('[')
 	$type = [System.Management.Automation.LanguagePrimitives]::ConvertTo($typeName, [type])
 	if ([type]::GetTypeCode($type) -eq 'Object') {throw "Cast to not supported type '$typeName'."}
 	[System.Management.Automation.LanguagePrimitives]::ConvertTo($node.InnerText, $type)
-}
-
-function New-Array($node) {
-	$r = [System.Collections.Generic.List[object]]@()
-	foreach($node in $node.ChildNodes) {
-		switch($node.Name) {
-			NewLine {break}
-			String {$r.Add($node.InnerText); break}
-			Number {$r.Add((New-Number $node.InnerText)); break}
-			Variable {$r.Add((New-Variable $node.InnerText)); break}
-			Table {$r.Add((New-Table $node)); break}
-			Cast {$r.Add((New-Cast $node)); break}
-			default {throw "Array contains not supported node '$_'."}
-		}
-	}
-	, $r
-}
-
-function New-Table($node) {
-	$r = [System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase)
-	foreach($node in $node.ChildNodes) {
-		if ($node.Name -eq 'Item') {
-			if ($node.GetAttribute('Type') -eq 'Number') {
-				$key = New-Number $node.Key
-			}
-			else {
-				$key = $node.Key
-			}
-			if ($node.ChildNodes.Count -ne 1) {throw "Item must have one child node."}
-			$r.Add($key, (Get-PsdXml $node.FirstChild))
-		}
-		elseif ($node.Name -ne 'NewLine') {
-			throw "Table contains not supported node '$($node.Name)'."
-		}
-	}
-	$r
 }
 
 Export-ModuleMember -Function @(
@@ -795,8 +812,8 @@ Export-ModuleMember -Function @(
 	'ConvertTo-Psd'
 	'Convert-XmlToPsd'
 	'Export-PsdXml'
-	'Get-PsdXml'
+	'Get-Psd'
 	'Import-Psd'
 	'Import-PsdXml'
-	'Set-PsdXml'
+	'Set-Psd'
 )
