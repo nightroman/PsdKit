@@ -43,23 +43,6 @@ LONG DESCRIPTION
             - Cast
                 Expressions like [DateTime] '2018-01-01'
 
-    PSD-XML get/set scenarios:
-
-        Get-Psd and Set-Psd work well if you compose the changeable
-        parts of psd1 properly. Namely:
-
-            - avoid comments
-            - avoid commas, use @() and separate values by new lines
-            - avoid semicolons, separate hashtable items by new lines
-
-        In this case, you get and set normal PowerShell data, you do not have
-        to know the details of PSD-XML, except some simple XPath expressions,
-        often the same 'Data/Table/Item[@Key="..."]'.
-
-        Other parts of psd1 files (not supposed to be changed by scripts) are
-        composed as you like, everything except some space formatting is kept
-        when you change data and save.
-
 EXAMPLE
     Dump object properties
 
@@ -96,9 +79,9 @@ EXAMPLE
         Export-PsdXml $FilePath $xml
 
 PSD-XML SCHEMA
-    With recommended Get-Psd and Set-Psd you do not have to know much
-    details about the schema, they operate with native PowerShell data. But
-    for some XPath paths, normally simple, some understanding is needed.
+    With Get-Psd and Set-Psd you do not have to know much about the schema,
+    they operate with native PowerShell data. But for some XPath paths,
+    often simple and similar, some understanding is needed.
 
     <Data>
         The root node.

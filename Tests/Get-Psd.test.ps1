@@ -159,3 +159,13 @@ task DocumentAndDataNode {
 	($r = Get-Psd $xml.Data)
 	equals $r 42
 }
+
+task HexNumber {
+    $xml = {@{
+    	int = 0xffffffff
+    	long = 0xffffffffffffffff
+    }}.ToString() | Convert-PsdToXml
+    ($r = Get-Psd $xml)
+	equals $r.int (-1)
+	equals $r.long (-1L)
+}

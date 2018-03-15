@@ -1,6 +1,11 @@
 
 # PsdKit Release Notes
 
+## vNext
+
+- `Get-Psd`
+    - Support hex number notation.
+
 ## v0.4.0
 
 - Rename `Get-PsdXml` to `Get-Psd`, `Set-PsdXml` to `Set-Psd`.
