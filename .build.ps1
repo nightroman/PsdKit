@@ -64,7 +64,7 @@ task UpdateScript {
 
 # Synopsis: Make the module folder.
 task Module Help, Version, UpdateScript, {
-	Remove-Item [z] -Force -Recurse
+	remove z
 	$dir = "$BuildRoot\z\PsdKit"
 	$null = mkdir $dir
 
@@ -79,8 +79,7 @@ task Module Help, Version, UpdateScript, {
 
 # Synopsis: Remove temp files.
 task Clean {
-	Get-Item z -ErrorAction 0 |
-	Remove-Item -Force -Recurse
+	remove z
 }
 
 task . UpdateScript, Manifest, Help, Test

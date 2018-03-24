@@ -276,25 +276,27 @@ function Write-Psd($Object, $Depth=0, [switch]$NoIndent) {
 				$script:Writer.WriteLine("'{0}'", $Object)
 				return
 			}
-			elseif ($type -eq [System.Management.Automation.SwitchParameter]) {
+			if ($type -eq [System.Management.Automation.SwitchParameter]) {
 				$script:Writer.WriteLine($(if ($Object) {'$true'} else {'$false'}))
 				return
 			}
-			elseif ($type -eq [System.Uri]) {
+			if ($type -eq [System.Uri]) {
 				$script:Writer.WriteLine("'{0}'", $Object.ToString().Replace("'", "''"))
 				return
 			}
-			elseif ($script:Depth -and $Depth -ge $script:Depth) {
+			if ($script:Depth -and $Depth -ge $script:Depth) {
 				$script:Writer.WriteLine("''''")
 				++$script:Pruned
 				return
 			}
-			elseif ($Object -is [System.Collections.IDictionary]) {
+			if ($Object -is [System.Collections.IDictionary]) {
 				if ($Object.Count) {
+					$itemNo = 0
 					$script:Writer.WriteLine('@{')
 					$indent2 = $script:Indent * ($Depth + 1)
 					foreach($e in $Object.GetEnumerator()) {
 						$key = $e.Key
+						$value = $e.Value
 						$keyType = $key.GetType()
 						if ($keyType -eq [string]) {
 							if ($key -match '^\w+$' -and $key -match '^\D') {
@@ -310,10 +312,15 @@ function Write-Psd($Object, $Depth=0, [switch]$NoIndent) {
 						elseif ($keyType -eq [long]) {
 							$script:Writer.Write('{0}{1}L = ', $indent2, $key)
 						}
+						elseif ($script:Depth) {
+							++$script:Pruned
+							$script:Writer.Write('{0}item__{1} = ', $indent2, ++$itemNo)
+							$value = New-Object 'System.Collections.Generic.KeyValuePair[object, object]' $key, $value
+						}
 						else {
 							throw "Not supported key type '$($keyType.FullName)'."
 						}
-						Write-Psd $e.Value ($Depth + 1) -NoIndent
+						Write-Psd $value ($Depth + 1) -NoIndent
 					}
 					$script:Writer.WriteLine("$indent1}")
 				}
@@ -322,7 +329,7 @@ function Write-Psd($Object, $Depth=0, [switch]$NoIndent) {
 				}
 				return
 			}
-			elseif ($Object -is [System.Collections.IEnumerable]) {
+			if ($Object -is [System.Collections.IEnumerable]) {
 				$script:Writer.Write('@(')
 				$empty = $true
 				foreach($e in $Object) {
@@ -340,7 +347,7 @@ function Write-Psd($Object, $Depth=0, [switch]$NoIndent) {
 				}
 				return
 			}
-			elseif ($Object -is [PSCustomObject] -or $script:Depth) {
+			if ($Object -is [PSCustomObject] -or $script:Depth) {
 				$script:Writer.WriteLine('@{')
 				$indent2 = $script:Indent * ($Depth + 1)
 				foreach($e in $Object.PSObject.Properties) {

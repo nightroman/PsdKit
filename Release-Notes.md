@@ -1,8 +1,10 @@
 
 # PsdKit Release Notes
 
-## vNext
+## v0.5.0
 
+- `ConvertTo-Psd`
+    - With Depth, convert complex items to surrogates `item_<n> = @{Key = .. Value = ..}`
 - `Get-Psd`
     - Support hex number notation.
 

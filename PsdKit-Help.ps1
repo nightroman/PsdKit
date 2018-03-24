@@ -105,7 +105,7 @@ $GetSetXPath = @'
 ### ConvertTo-Psd command help
 @{
 	command = 'ConvertTo-Psd'
-	synopsis = 'Converts objects to a psd1-formatted strings.'
+	synopsis = 'Converts objects to psd1 strings.'
 	description = @'
 	This command converts objects to strings in PowerShell data (psd1) format.
 
@@ -121,10 +121,12 @@ $GetSetXPath = @'
 		- number -> x.ToString()
 		- null -> $null
 
+	See Depth for the object dump mode details.
+
 	Note that the result string does not include the trailing new line. Thus,
 	if you use ConvertTo-Psd with some Set-Content (save) or Add-Content (log)
 	then you do not have to use -NoNewLine, it is added by these commands. But
-	on saving by other methods you may need to add a new line.
+	on saving by other methods you may need a new line.
 '@
 	parameters = @{
 		InputObject = @'
@@ -134,6 +136,12 @@ $GetSetXPath = @'
 		Tells to convert all objects and specifies the maximum depth. Truncated
 		objects are written as ''''. The default value is 0 for supported types
 		with the depth limited by the PowerShell call stack.
+
+		With Depth, dictionary items with not trivial keys are converted to
+		surrogate items like `item_<n> = @{Key = .. Value = ..}`. They are
+		also counted as truncated.
+
+		The command writes a warning about truncated objects.
 '@
 		Indent = @"
 	Specifies the indent string. By default it is four spaces.

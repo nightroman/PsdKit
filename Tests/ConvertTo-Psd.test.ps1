@@ -187,3 +187,18 @@ task Depth {
 	equals ([guid]$r.Runspace.InstanceId) $Host.Runspace.InstanceId
 	equals $r.Runspace.RunspaceStateInfo ''''
 }
+
+task BadKeyAndSurrogateItem {
+	$data = @{
+		[DateTime] '2018-01-01' = 1
+		[DateTime] '2018-01-02' = 2
+	}
+
+	# normal mode, bad key
+	($r = try {ConvertTo-Psd $data} catch {$_})
+	equals "$r" "Not supported key type 'System.DateTime'."
+
+	# dump mode, surrogate items
+	($r = ConvertTo-Psd $data -Depth 2)
+	Test-Hash $r 09663c9c7a0ef7d66a6163882c02aa94
+}
