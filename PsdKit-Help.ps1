@@ -270,6 +270,10 @@ $IndentSpecial
 '@
 	parameters = @{
 		Path = 'The input file path.'
+		MergeInto = @'
+		Specifies the hashtable into which the imported hashtable is merged.
+		The imported data must be a hashtable in this scenario.
+'@
 	}
 	outputs = @(
 		@{

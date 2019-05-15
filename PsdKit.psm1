@@ -156,12 +156,24 @@ function Import-Psd {
 	[OutputType([Hashtable])]
 	param(
 		[Parameter(Position=0, Mandatory=1)]
-		[string] $Path
+		[string] $Path,
+		[hashtable] $MergeInto
 	)
 	trap {ThrowTerminatingError $_}
+
 	$Path = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Path)
-	Import-LocalizedData -BaseDirectory ([System.IO.Path]::GetDirectoryName($Path)) -FileName ([System.IO.Path]::GetFileName($Path)) -BindingVariable r
-	$r
+	$data = $null
+	Import-LocalizedData -BaseDirectory ([System.IO.Path]::GetDirectoryName($Path)) -FileName ([System.IO.Path]::GetFileName($Path)) -BindingVariable data
+
+	if ($MergeInto) {
+		if ($data -isnot [hashtable]) {throw 'With Merge imported data must be a hastable.'}
+		foreach($_ in $data.GetEnumerator()) {
+			$MergeInto[$_.Key] = $_.Value
+		}
+	}
+	else {
+		$data
+	}
 }
 
 #.ExternalHelp PsdKit-Help.xml

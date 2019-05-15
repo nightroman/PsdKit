@@ -1,6 +1,10 @@
 
 # PsdKit Release Notes
 
+## v0.5.1
+
+`Import-Psd` - new parameter `MergeInto`, #7.
+
 ## v0.5.0
 
 - `ConvertTo-Psd`
