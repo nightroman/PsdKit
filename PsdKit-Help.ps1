@@ -120,6 +120,7 @@ $GetSetXPath = @'
 		- [bool] -> $true and $false
 		- number -> x.ToString()
 		- null -> $null
+		- [scriptblock] -> {...}
 
 	See Depth for the object dump mode details.
 
@@ -234,6 +235,8 @@ $IndentSpecial
 			without @() notation.
 		Comment
 			[string]
+		Block
+			[scriptblock]
 
 	For more details about PSD-XML scenarios see
 
@@ -273,6 +276,13 @@ $IndentSpecial
 		MergeInto = @'
 		Specifies the hashtable into which the imported hashtable is merged.
 		The imported data must be a hashtable in this scenario.
+'@
+		Unsafe = @'
+		Tells to invoke the specified data file as script in order to get data.
+		This way may be used for importing some data not supported by psd1,
+		e.g. any variables and script blocks.
+
+		WARNING: This is unsafe, do not use if you are not sure what it is.
 '@
 	}
 	outputs = @(

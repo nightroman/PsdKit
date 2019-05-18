@@ -202,3 +202,17 @@ task BadKeyAndSurrogateItem {
 	($r = ConvertTo-Psd $data -Depth 2)
 	Test-Hash $r 09663c9c7a0ef7d66a6163882c02aa94
 }
+
+# Convert data with script blocks.
+task Blocks {
+	$data = @{
+		Id = 1
+		Block = {42}
+	}
+	($r = ConvertTo-Psd $data)
+	$r = & ([scriptblock]::Create($r))
+	equals $r.Count 2
+	equals $r.Id 1
+	equals ($r.Block.GetType()) ([scriptblock])
+	equals (& $r.Block) 42
+}

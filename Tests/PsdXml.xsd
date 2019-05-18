@@ -36,6 +36,12 @@
     </xs:simpleContent>
   </xs:complexType>
 
+  <xs:complexType name="Block">
+    <xs:simpleContent>
+      <xs:extension base="xs:string" />
+    </xs:simpleContent>
+  </xs:complexType>
+
   <xs:complexType name="Cast">
     <xs:choice>
       <xs:element name="Array" type="Array" />

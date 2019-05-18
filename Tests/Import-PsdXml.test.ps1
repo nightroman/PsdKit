@@ -19,3 +19,12 @@ line3'
 
 	Remove-Item z.psd1
 }
+
+# Import data with script blocks and convert back to psd1.
+task Blocks {
+	$xml = Import-PsdXml test-03.psd1
+	$xml.InnerXml
+
+	$r = Convert-XmlToPsd $xml
+	equals $r ([System.IO.File]::ReadAllText("$BuildRoot\test-03.psd1"))
+}

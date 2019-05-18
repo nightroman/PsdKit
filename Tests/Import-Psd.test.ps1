@@ -47,3 +47,22 @@ task CannotMergeMixed {
 	($r = try {Import-Psd test-02.psd1 -MergeInto $data} catch {$_})
 	assert (($r | Out-String) -like '*With Merge imported data must be a hastable.*try {Import-Psd *')
 }
+
+# With -Unsafe any data can be imported because the source is actually invoked.
+task ImportPsdUnsafe {
+	# unsafe import
+	$r = Import-Psd test-03.psd1 -Unsafe
+
+	# usual data
+	equals $r.Id 1
+
+	# trivial script block
+	equals ($r.Block.GetType()) ([scriptblock])
+	equals (& $r.Block) 42
+
+	# complex script block
+	equals ($r.Complex.GetType()) ([scriptblock])
+	$r = & $r.Complex 42
+	equals $r[0] 42
+	equals $r[1].Id 42
+}

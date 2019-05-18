@@ -169,3 +169,32 @@ task HexNumber {
 	equals $r.int (-1)
 	equals $r.long (-1L)
 }
+
+task BlockInData {
+	$xml = Convert-PsdToXml '{42}'
+	equals $xml.InnerXml '<Data><Block>42</Block></Data>'
+
+	($r = Get-Psd $xml)
+	equals ($r.GetType()) ([scriptblock])
+	equals (& $r) 42
+}
+
+task BlockInTable {
+	$xml = Convert-PsdToXml '@{Id=1; Block={42}}'
+	equals $xml.InnerXml '<Data><Table><Item Key="Id"><Number>1</Number></Item><Semicolon /><Item Key="Block"><Block>42</Block></Item></Table></Data>'
+
+	($r = Get-Psd $xml '/Data/Table/Item[@Key="Block"]')
+	equals ($r.GetType()) ([scriptblock])
+	equals (& $r) 42
+}
+
+task BlockInArray {
+	#! use @(), not just comma separated values
+	$xml = Convert-PsdToXml '@{Array=@(1, {42})}'
+	equals $xml.InnerXml '<Data><Table><Item Key="Array"><Array><Number>1</Number><Comma /><Block>42</Block></Array></Item></Table></Data>'
+
+	($r = Get-Psd $xml '/Data/Table/Item[@Key="Array"]')
+	equals $r.Count 2
+	equals $r[0] 1
+	equals ($r[1].GetType()) ([scriptblock])
+}

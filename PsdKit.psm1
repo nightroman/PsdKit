@@ -142,6 +142,9 @@ function Get-Psd {
 		Data {
 			return New-ItemPsd $node
 		}
+		Block {
+			return [scriptblock]::Create($node.InnerText)
+		}
 		'#document' {
 			return New-ItemPsd $node
 		}
@@ -157,13 +160,20 @@ function Import-Psd {
 	param(
 		[Parameter(Position=0, Mandatory=1)]
 		[string] $Path,
-		[hashtable] $MergeInto
+		[hashtable] $MergeInto,
+		[switch] $Unsafe
 	)
 	trap {ThrowTerminatingError $_}
 
 	$Path = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Path)
-	$data = $null
-	Import-LocalizedData -BaseDirectory ([System.IO.Path]::GetDirectoryName($Path)) -FileName ([System.IO.Path]::GetFileName($Path)) -BindingVariable data
+	if ($Unsafe) {
+		$block = [scriptblock]::Create([System.IO.File]::ReadAllText($Path))
+		$data = & $block
+	}
+	else {
+		$data = $null
+		Import-LocalizedData -BaseDirectory ([System.IO.Path]::GetDirectoryName($Path)) -FileName ([System.IO.Path]::GetFileName($Path)) -BindingVariable data
+	}
 
 	if ($MergeInto) {
 		if ($data -isnot [hashtable]) {throw 'With Merge imported data must be a hastable.'}
@@ -359,6 +369,10 @@ function Write-Psd($Object, $Depth=0, [switch]$NoIndent) {
 				}
 				return
 			}
+			if ($Object -is [scriptblock]) {
+				$script:Writer.WriteLine('{{{0}}}', $Object)
+				return
+			}
 			if ($Object -is [PSCustomObject] -or $script:Depth) {
 				$script:Writer.WriteLine('@{')
 				$indent2 = $script:Indent * ($Depth + 1)
@@ -483,6 +497,10 @@ function Write-XmlElement($elem, $Depth=0) {
 			Write-Text ';' -NoSpace
 			break
 		}
+		Block {
+			Write-Text ('{{{0}}}' -f $elem.InnerText)
+			break
+		}
 		default {
 			throw "Unexpected node '$_'."
 		}
@@ -525,6 +543,28 @@ function New-PsdXml($Script) {
 	}
 }
 
+# Find block end and get its token.
+function Find-BlockEnd {
+	while($script:Queue.Count) {
+		$t1 = $script:Queue.Dequeue()
+		switch($t1.Type) {
+			GroupEnd {
+				if ($t1.Content -eq '}') {
+					return $t1
+				}
+				break
+			}
+			GroupStart {
+				if ($t1.Content -eq '@{' -or $t1.Content -eq '{') {
+					$null = Find-BlockEnd
+				}
+				break
+			}
+		}
+	}
+	throw 'Cannot find block end.'
+}
+
 # Add just one String, Number, Variable, Table, or Array.
 function Add-Value($elem, $t1) {
 	switch($t1.Type) {
@@ -551,10 +591,18 @@ function Add-Value($elem, $t1) {
 				'@{' {
 					$e = Add-XmlElement $elem Table
 					Add-Table $e
+					break
 				}
 				'@(' {
 					$e = Add-XmlElement $elem Array
 					Add-Array $e
+					break
+				}
+				'{' {
+					$e = Add-XmlElement $elem Block
+					$t2 = Find-BlockEnd
+					$e.InnerText = $script.Substring($t1.Start + 1, $t2.Start - $t1.Start - 1)
+					break
 				}
 				default {
 					ThrowUnexpectedToken $t1
@@ -569,6 +617,7 @@ function Add-Value($elem, $t1) {
 			$e.SetAttribute('Type', $(if ($v[0] -eq '[') {$v} else {"[$v]"}))
 			$t2 = $script:Queue.Dequeue()
 			Add-Value $e $t2
+			break
 		}
 		default {
 			ThrowUnexpectedToken $t1
@@ -637,7 +686,9 @@ function Add-Item($elem, $t1, $Type) {
 				return
 			}
 			NewLine {
-				if ($valueAdded) {return}
+				if ($valueAdded) {
+					return
+				}
 				$null = $script:Queue.Dequeue()
 				$null = Add-XmlElement $elem NewLine
 				break
@@ -756,7 +807,9 @@ function Write-Text($Text, [switch]$NoSpace) {
 function New-TablePsd($node) {
 	$r = [System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase)
 	foreach($node in $node.ChildNodes) {switch($node.Name) {
-		NewLine {break}
+		NewLine {
+			break
+		}
 		Item {
 			if ($node.GetAttribute('Type') -eq 'Number') {
 				$key = New-NumberPsd $node.Key
@@ -767,8 +820,12 @@ function New-TablePsd($node) {
 			$r.Add($key, (New-ItemPsd $node))
 			break
 		}
-		Comment {break}
-		Semicolon {break}
+		Comment {
+			break
+		}
+		Semicolon {
+			break
+		}
 		default {
 			throw "Table has not supported node '$($node.Name)'."
 		}
@@ -788,16 +845,45 @@ function New-ItemPsd($node) {
 function New-ArrayPsd($node) {
 	$r = [System.Collections.Generic.List[object]]@()
 	foreach($node in $node.ChildNodes) {switch($node.Name) {
-		NewLine {break}
-		String {$r.Add($node.InnerText); break}
-		Number {$r.Add((New-NumberPsd $node.InnerText)); break}
-		Variable {$r.Add((New-VariablePsd $node.InnerText)); break}
-		Table {$r.Add((New-TablePsd $node)); break}
-		Cast {$r.Add((New-CastPsd $node)); break}
-		Comma {break}
-		Comment {break}
-		Semicolon {break}
-		default {throw "Array contains not supported node '$_'."}
+		NewLine {
+			break
+		}
+		String {
+			$r.Add($node.InnerText)
+			break
+		}
+		Number {
+			$r.Add((New-NumberPsd $node.InnerText))
+			break
+		}
+		Variable {
+			$r.Add((New-VariablePsd $node.InnerText))
+			break
+		}
+		Table {
+			$r.Add((New-TablePsd $node))
+			break
+		}
+		Cast {
+			$r.Add((New-CastPsd $node))
+			break
+		}
+		Comma {
+			break
+		}
+		Comment {
+			break
+		}
+		Semicolon {
+			break
+		}
+		Block {
+			$r.Add([scriptblock]::Create($node.InnerText))
+			break
+		}
+		default {
+			throw "Array contains not supported node '$_'."
+		}
 	}}
 	, $r
 }

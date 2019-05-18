@@ -40,6 +40,8 @@ LONG DESCRIPTION
             - Variable
                 $null, $true, $false
                 other variables are supported but unusual in psd1
+            - Block
+                script block, supported but unusual in psd1
             - Cast
                 Expressions like [DateTime] '2018-01-01'
 
@@ -89,7 +91,7 @@ PSD-XML SCHEMA
             Indent: inferred non-default indent (two spaces or one tab)
                     or some custom indent used as default on exporting
         Nodes:
-            Table, Array, String, Number, Variable, Cast,
+            Table, Array, String, Number, Variable, Block, Cast,
             Comment, NewLine, Comma, Semicolon
     <Table>
         Hashtable nodes for `@{}`.
@@ -120,6 +122,9 @@ PSD-XML SCHEMA
     <Variable>
         Text:
             variable name without `$`
+    <Block>
+        Text:
+            script block content without `{}`
     <Cast>
         Attributes:
             Type: type literal, e.g. `[DateTime]`

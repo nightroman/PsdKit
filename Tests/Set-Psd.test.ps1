@@ -115,3 +115,14 @@ task SetCommentBad {
 	equals "$r" 'Comment must be line #... or block <#...#>.'
 	equals $r.FullyQualifiedErrorId Set-Psd
 }
+
+task Block {
+	$xml = Convert-PsdToXml '{42}'
+	equals $xml.InnerXml '<Data><Block>42</Block></Data>'
+
+	$node = $xml.SelectSingleNode('//Block')
+	equals ((Get-Psd $node).GetType()) ([scriptblock])
+
+	Set-Psd $node { 33 }
+	equals $xml.InnerXml '<Data><Block> 33 </Block></Data>'
+}

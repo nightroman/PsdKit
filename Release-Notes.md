@@ -1,6 +1,14 @@
 
 # PsdKit Release Notes
 
+## v0.6.0
+
+Support script blocks, #6
+
+- `ConvertTo-Psd` can write script blocks
+- `Import-Psd -Unsafe` can import script blocks
+- All PSD-XML commands support XML elements `Block`
+
 ## v0.5.1
 
 `Import-Psd` - new parameter `MergeInto`, #7.
