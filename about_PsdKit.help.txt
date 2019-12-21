@@ -82,8 +82,8 @@ EXAMPLE
 
 PSD-XML SCHEMA
     With Get-Psd and Set-Psd you do not have to know much about the schema,
-    they operate with native PowerShell data. But for some XPath paths,
-    often simple and similar, some understanding is needed.
+    they operate with native PowerShell data. But XPath paths, often simple
+    and similar, need some understanding.
 
     <Data>
         The root node.
