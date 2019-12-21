@@ -442,15 +442,25 @@ function Write-XmlElement($elem, $Depth=0) {
 			break
 		}
 		Table {
-			Write-Text '@{'
-			Write-XmlChild $elem ($Depth + 1)
-			Write-Text '}'
+			if ($elem.HasChildNodes) {
+				Write-Text '@{'
+				Write-XmlChild $elem ($Depth + 1)
+				Write-Text '}'
+			}
+			else {
+				Write-Text '@{}'
+			}
 			break
 		}
 		Array {
-			Write-Text '@('
-			Write-XmlChild $elem ($Depth + 1)
-			Write-Text ')'
+			if ($elem.HasChildNodes) {
+				Write-Text '@('
+				Write-XmlChild $elem ($Depth + 1)
+				Write-Text ')'
+			}
+			else {
+				Write-Text '@()'
+			}
 			break
 		}
 		Item {

@@ -1,5 +1,6 @@
 
 . ./About.ps1 Get-Psd
+$Version = $PSVersionTable.PSVersion.Major
 
 task BadNumber {
 	$xml = [xml]'<Number>bad</Number>'
@@ -80,8 +81,15 @@ task Cases {
 		assert ($r.array -is [object[]]) #??
 	}
 
+	# v6- decimal = 7.92281625142643E+28
+	# v7+ decimal = 7.922816251426434E+28
 	($r = ConvertTo-Psd $r)
-	Test-Hash $r c2354d7d6b6b9d57c6de6cc29b3bee92
+	if ($Version -ge 7) {
+		Test-Hash $r cea45d84b440f089c375e5fc56ff902e
+	}
+	else {
+		Test-Hash $r c2354d7d6b6b9d57c6de6cc29b3bee92
+	}
 
 	assert ($data.decimal -is [decimal])
 }

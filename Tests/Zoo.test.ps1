@@ -1,7 +1,9 @@
 
 . ./About.ps1
+$Version = $PSVersionTable.PSVersion.Major
 
-task Validate {
+# v2 used to work, now fails on Schemas.Add "Configuration system failed to initialize"
+task Validate -If ($Version -ge 3) {
 	# test PsdXml round trip
 	$xml = Import-PsdXml test-01.psd1
 	Export-PsdXml z.psd1 $xml

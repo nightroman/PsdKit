@@ -77,6 +77,12 @@ task Module Help, Version, UpdateScript, {
 	)
 }
 
+task PushPSGallery Module, {
+	$NuGetApiKey = Read-Host NuGetApiKey
+	Publish-Module -NuGetApiKey $NuGetApiKey -Path z/PsdKit
+},
+Clean
+
 # Synopsis: Remove temp files.
 task Clean {
 	remove z

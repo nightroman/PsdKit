@@ -125,3 +125,18 @@ task ItemCommaNewLine {
 	($r = Convert-XmlToPsd $xml)
 	Test-Hash $r b83044d14c4b5ea5082dedf208cf2e27
 }
+
+# Empty arrays and tables should be @() @{} without spaces.
+task EmptyArrayTable {
+	$data = @'
+@{
+	array = @()
+	table = @{}
+}
+'@
+
+	$xml = Convert-PsdToXml $data
+	$r = Convert-XmlToPsd $xml
+
+	equals $data $r
+}

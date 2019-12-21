@@ -1,5 +1,8 @@
-
 # PsdKit Release Notes
+
+## v0.6.1
+
+Avoid spaces on converting empty arrays and tables.
 
 ## v0.6.0
 
