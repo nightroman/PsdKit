@@ -1,7 +1,5 @@
 
-. ./About.ps1 Update-PsdWebData.ps1
-if ($Version -eq 2) {return}
-if ($Version -eq 6) {. Set-Mock Import-Module {}}
+. .\About.ps1 Update-PsdWebData.ps1
 
 task Basic {
 	Set-Content z.psd1 {
@@ -13,7 +11,7 @@ task Basic {
 
 	### test 1 : empty Data -> the whole object is set
 
-	. Set-Mock Invoke-RestMethod { @{ p1 = 1; p2 = 'p2' } }
+	function Invoke-RestMethod { @{ p1 = 1; p2 = 'p2' } }
 	($r = Update-PsdWebData.ps1 z.psd1)
 	equals $r 'bar updated'
 
@@ -25,7 +23,7 @@ task Basic {
 	### test 2 : custom Data -> existing changed items are updated
 	# note that p1 is not changed and new p3 is ignored
 
-	. Set-Mock Invoke-RestMethod { @{ p1 = 1; p2 = 'p2-new'; p3 = 'extra' } }
+	function Invoke-RestMethod { @{ p1 = 1; p2 = 'p2-new'; p3 = 'extra' } }
 	($r = Update-PsdWebData.ps1 z.psd1)
 	equals $r 'bar p2 p2 -> p2-new'
 
@@ -36,7 +34,7 @@ task Basic {
 
 	### test 3 : missing data -> existing items are set to $null
 
-	. Set-Mock Invoke-RestMethod { @{ p1 = 1 } }
+	function Invoke-RestMethod { @{ p1 = 1 } }
 	($r = Update-PsdWebData.ps1 z.psd1)
 	equals $r 'bar p2 p2-new -> '
 
