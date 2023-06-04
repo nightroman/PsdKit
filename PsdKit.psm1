@@ -177,7 +177,9 @@ function Import-Psd {
 		}
 
 		if ($MergeInto) {
-			if ($data -isnot [hashtable]) {throw 'With Merge imported data must be a hastable.'}
+			if ($data -isnot [hashtable]) {
+				throw 'With MergeInto imported data must be a hastable.'
+			}
 			foreach($_ in $data.GetEnumerator()) {
 				$MergeInto[$_.Key] = $_.Value
 			}

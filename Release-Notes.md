@@ -1,5 +1,9 @@
 # PsdKit Release Notes
 
+## v0.6.3
+
+`Import-Psd` - support pipeline input, #8.
+
 ## v0.6.2
 
 Maintenance.

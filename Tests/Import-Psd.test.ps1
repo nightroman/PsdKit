@@ -45,7 +45,7 @@ task ImportMixed {
 task CannotMergeMixed {
 	$data = @{}
 	($r = try {Import-Psd test-02.psd1 -MergeInto $data} catch {$_})
-	equals "$r" 'With Merge imported data must be a hastable.'
+	equals "$r" 'With MergeInto imported data must be a hastable.'
 	assert ($r.InvocationInfo.PositionMessage -like '*try {Import-Psd *')
 }
 
@@ -66,4 +66,22 @@ task ImportPsdUnsafe {
 	$r = & $r.Complex 42
 	equals $r[0] 42
 	equals $r[1].Id 42
+}
+
+task ImportManyString {
+	$r = 'test-01.psd1', 'test-02.psd1', 'test-03.psd1' | Import-Psd -Unsafe
+	equals 5 $r.Count
+}
+
+task ImportManyObjects {
+	$r = Get-Item *.psd1 | Import-Psd -Unsafe
+	equals 5 $r.Count
+}
+
+task ImportManyMerge {
+	$data = @{}
+	$r = 'test-01.psd1', 'test-03.psd1' | Import-Psd -MergeInto $data -Unsafe
+	equals $null $r
+	equals 42 $data.Int
+	equals 1 $data.Id
 }
